@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>우리 재테크</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --text: #1a1a18;
+    --text2: #6b6a64;
+    --text3: #9e9d97;
+    --border: rgba(0,0,0,0.08);
+    --green: #1a7a58;
+    --green-bg: #e8f5ef;
+    --blue: #1e5fa8;
+    --blue-bg: #e8f0fb;
+    --red: #c0392b;
+    --amber: #b45309;
+    --amber-bg: #fef3e2;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+
+  /* Header */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  .app-header .date {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Bottom Nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 10px;
+    transition: color 0.15s;
+  }
+  .nav-btn svg { width: 22px; height: 22px; stroke-width: 1.6; }
+  .nav-btn.active { color: var(--green); }
+
+  /* Content */
+  .content { max-width: 480px; margin: 0 auto; padding: 16px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
+
+  /* Stat grid */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-box {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+  .stat-box .s-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .stat-box .s-val { font-size: 19px; font-weight: 600; color: var(--text); font-family: 'DM Mono', monospace; }
+  .stat-box .s-val.green { color: var(--green); }
+  .stat-box .s-val.red { color: var(--red); }
+
+  /* ETF rows */
+  .etf-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .etf-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .etf-name { font-size: 14px; font-weight: 500; }
+  .etf-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .etf-pct { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .etf-delta { font-size: 11px; margin-top: 2px; text-align: right; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  /* Progress bar */
+  .prog-wrap { margin-top: 10px; }
+  .prog-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .prog-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.4s ease; }
+
+  /* Form */
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    border-color: var(--green);
+    background: var(--surface);
+  }
+  .form-row textarea { resize: none; line-height: 1.6; }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.98); opacity: 0.85; }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-ghost { background: var(--surface2); color: var(--text2); margin-top: 8px; }
+
+  /* List items */
+  .list-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .list-item .li-main { font-size: 14px; font-weight: 500; }
+  .list-item .li-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .list-item .li-amt { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* Memo */
+  .memo-card {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .memo-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .tag-etf { background: var(--green-bg); color: var(--green); }
+  .tag-tax { background: var(--blue-bg); color: var(--blue); }
+  .tag-basic { background: var(--amber-bg); color: var(--amber); }
+  .tag-word { background: #f3e8ff; color: #6d28d9; }
+  .tag-etc { background: var(--surface); color: var(--text2); }
+  .memo-body { font-size: 13px; line-height: 1.7; color: var(--text); }
+  .memo-date { font-size: 11px; color: var(--text3); margin-top: 8px; font-family: 'DM Mono', monospace; }
+
+  /* Badge / pill */
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+
+  /* ISA calc */
+  .isa-result { background: var(--green-bg); border-radius: var(--radius-sm); padding: 14px; margin-top: 12px; }
+  .isa-result .ir-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .isa-result .ir-save { font-size: 16px; font-weight: 600; color: var(--green); border-top: 1px solid rgba(26,122,88,0.2); padding-top: 10px; margin-top: 6px; display: flex; justify-content: space-between; }
+
+  /* Section title */
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; letter-spacing: -0.3px; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 28px 0; color: var(--text3); font-size: 13px; }
+  .empty svg { width: 36px; height: 36px; stroke: var(--text3); margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
+
+  /* Delete btn */
+  .del-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; font-size: 16px; line-height: 1; }
+  .del-btn:hover { color: var(--red); }
+
+  /* Segment */
+  .seg { display: flex; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 14px; }
+  .seg-btn { flex: 1; padding: 7px; border: none; background: none; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; color: var(--text2); cursor: pointer; border-radius: 6px; transition: all 0.15s; }
+  .seg-btn.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow); }
+
+  /* Portfolio bars */
+  .port-bar { margin: 12px 0; }
+  .port-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .port-bar-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .port-bar-fill { height: 100%; border-radius: 4px; }
+
+  @media (max-width: 400px) {
+    .stat-box .s-val { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>💰 우리 재테크</h1>
+  <div class="date" id="header-date"></div>
+</div>
+
+<div class="content">
+
+  <!-- 홈 -->
+  <div class="page active" id="page-home">
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="s-label">총 투자금</div>
+        <div class="s-val green" id="home-total">0원</div>
+      </div>
+      <div class="stat-box">
+        <div class="s-label">이번 달 지출</div>
+        <div class="s-val" id="home-spend">0원</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">이달 투자 목표</div>
+      <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace;" id="home-prog-val">0 / 50만원</div>
+      <div class="prog-wrap">
+        <div class="prog-track"><div class="prog-fill" id="home-prog-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">ETF 현황 (예시)</div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">TIGER 미국S&P500</div>
+          <div class="etf-sub">월 30만원 적립</div>
+        </div>
+        <div style="text-align:right">
+          <div class="etf-pct pos">+4.2%</div>
+          <div class="etf-delta pos">+126,000원</div>
+        </div>
+      </div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">TIGER 나스닥100</div>
+          <div class="etf-sub">월 10만원 적립</div>
+        </div>
+        <div style="text-align:right">
+          <div class="etf-pct pos">+6.8%</div>
+          <div class="etf-delta pos">+68,000원</div>
+        </div>
+      </div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">현금 대기</div>
+          <div class="etf-sub">기회 매수용</div>
+        </div>
+        <div style="text-align:right">
+          <div class="etf-pct" style="color:var(--text2)">100,000원</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">최근 투자 기록</div>
+      <div id="home-recent-invest"><div class="empty">아직 투자 기록이 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- 투자 기록 -->
+  <div class="page" id="page-invest">
+    <div class="card">
+      <div class="card-label">투자 추가</div>
+      <div class="form-row">
+        <label>월</label>
+        <input type="month" id="inv-month" />
+      </div>
+      <div class="form-row">
+        <label>금액 (원)</label>
+        <input type="number" id="inv-amt" placeholder="500000" />
+      </div>
+      <div class="form-row">
+        <label>항목</label>
+        <input type="text" id="inv-note" placeholder="TIGER 미국S&P500" />
+      </div>
+      <button class="btn btn-primary" onclick="addInvest()">기록 추가</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">투자 내역</div>
+      <div id="invest-list"><div class="empty">아직 기록이 없어요</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">월별 합계</div>
+      <div id="invest-summary"><div class="empty">데이터가 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- ETF -->
+  <div class="page" id="page-etf">
+    <div class="card">
+      <div class="card-label">추천 포트폴리오 (월 50만원 기준)</div>
+      <div class="port-bar">
+        <div class="port-bar-label"><span>TIGER 미국S&P500</span><span style="font-weight:600">30만원 (60%)</span></div>
+        <div class="port-bar-track"><div class="port-bar-fill" style="width:60%;background:var(--green)"></div></div>
+      </div>
+      <div class="port-bar">
+        <div class="port-bar-label"><span>TIGER 나스닥100</span><span style="font-weight:600">10만원 (20%)</span></div>
+        <div class="port-bar-track"><div class="port-bar-fill" style="width:20%;background:var(--blue)"></div></div>
+      </div>
+      <div class="port-bar">
+        <div class="port-bar-label"><span>현금 대기</span><span style="font-weight:600">10만원 (20%)</span></div>
+        <div class="port-bar-track"><div class="port-bar-fill" style="width:20%;background:var(--text3)"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">ISA 계좌 절세 계산기</div>
+      <div class="form-row">
+        <label>예상 연간 수익 (원)</label>
+        <input type="number" id="isa-profit" placeholder="500000" oninput="calcISA()" />
+      </div>
+      <div class="isa-result" id="isa-result" style="display:none">
+        <div class="ir-row"><span style="color:var(--text2)">일반계좌 세금 (15.4%)</span><span id="isa-normal">-</span></div>
+        <div class="ir-row"><span style="color:var(--text2)">ISA 계좌 세금</span><span id="isa-tax" style="color:var(--green)">-</span></div>
+        <div class="ir-save"><span>절약 금액</span><span id="isa-save">-</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:12px;line-height:1.6">
+        ISA: 연 2,000만원 한도 · 수익 200만원까지 비과세 · 초과분 9.9% · 3년 의무유지
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">ETF 용어 정리</div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">S&P500</div>
+          <div class="etf-sub">미국 대형주 500개 지수 추종</div>
+        </div>
+        <div class="etf-pct" style="color:var(--green);font-size:12px">안정형</div>
+      </div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">나스닥100</div>
+          <div class="etf-sub">미국 기술주 100개 지수 추종</div>
+        </div>
+        <div class="etf-pct" style="color:var(--amber);font-size:12px">성장형</div>
+      </div>
+      <div class="etf-row">
+        <div>
+          <div class="etf-name">KODEX200</div>
+          <div class="etf-sub">한국 200대 기업 지수 추종</div>
+        </div>
+        <div class="etf-pct" style="color:var(--blue);font-size:12px">국내형</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 가계부 -->
+  <div class="page" id="page-spend">
+    <div class="card">
+      <div class="card-label">지출 추가</div>
+      <div class="form-row">
+        <label>날짜</label>
+        <input type="date" id="sp-date" />
+      </div>
+      <div class="form-row">
+        <label>카테고리</label>
+        <select id="sp-cat">
+          <option>식비</option>
+          <option>교통</option>
+          <option>쇼핑</option>
+          <option>카페</option>
+          <option>공과금</option>
+          <option>문화/여가</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>금액 (원)</label>
+        <input type="number" id="sp-amt" placeholder="50000" />
+      </div>
+      <div class="form-row">
+        <label>메모</label>
+        <input type="text" id="sp-memo" placeholder="점심 식사" />
+      </div>
+      <button class="btn btn-primary" onclick="addSpend()">지출 추가</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">이번 달 지출</div>
+      <div id="spend-total-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;color:var(--text2)">합계</span>
+        <span style="font-size:18px;font-weight:600;font-family:'DM Mono',monospace;" id="spend-total">0원</span>
+      </div>
+      <div id="spend-list"><div class="empty">아직 기록이 없어요</div></div>
+    </div>
+  </div>
+
+  <!-- 공부 메모 -->
+  <div class="page" id="page-memo">
+    <div class="card">
+      <div class="card-label">메모 추가</div>
+      <div class="form-row">
+        <label>태그</label>
+        <select id="memo-tag-sel">
+          <option value="etf">ETF</option>
+          <option value="basic">주식 기초</option>
+          <option value="tax">세금/절세</option>
+          <option value="word">경제 용어</option>
+          <option value="etc">기타</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>내용</label>
+        <textarea id="memo-text" rows="4" placeholder="오늘 공부한 내용을 적어보세요..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addMemo()">저장</button>
+    </div>
+    <div id="memo-list"></div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="goPage('home', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    홈
+  </button>
+  <button class="nav-btn" onclick="goPage('invest', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    투자 기록
+  </button>
+  <button class="nav-btn" onclick="goPage('etf', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    ETF
+  </button>
+  <button class="nav-btn" onclick="goPage('spend', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    가계부
+  </button>
+  <button class="nav-btn" onclick="goPage('memo', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    공부 메모
+  </button>
+</nav>
+
+<script>
+const S = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e) { return null; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+let invests = S.get('jt-invests') || [];
+let spends  = S.get('jt-spends')  || [];
+let memos   = S.get('jt-memos')   || [
+  { tag:'etf',   text:'ETF = 여러 주식을 묶은 상품. 분산 투자 효과. 인덱스 펀드와 달리 주식처럼 매매 가능.', date:'2025.05.09' },
+  { tag:'tax',   text:'ISA 계좌: 연간 2000만원 한도, 수익 200만원까지 비과세. 3년 의무 유지. 먼저 ISA 채우고 나머지 일반계좌로.', date:'2025.05.09' },
+  { tag:'basic', text:'적립식 투자: 매달 같은 날, 같은 금액으로 기계적으로 매수. 타이밍을 재지 않는 것이 핵심.', date:'2025.05.09' }
+];
+
+const catColors = { '식비':'#1a7a58','교통':'#1e5fa8','쇼핑':'#b45309','카페':'#9333ea','공과금':'#6b6a64','문화/여가':'#c0392b','기타':'#9e9d97' };
+const tagClass  = { etf:'tag-etf', basic:'tag-basic', tax:'tag-tax', word:'tag-word', etc:'tag-etc' };
+const tagLabel  = { etf:'ETF', basic:'주식 기초', tax:'세금/절세', word:'경제 용어', etc:'기타' };
+
+function fmt(n) {
+  if (n >= 10000000) return (n/10000000).toFixed(1).replace(/\.0$/,'') + '천만원';
+  if (n >= 10000) return Math.floor(n/10000) + '만원';
+  return n.toLocaleString() + '원';
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+function todayMonth() { return new Date().toISOString().slice(0,7); }
+
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'home') renderHome();
+  if (id === 'invest') renderInvests();
+  if (id === 'spend') renderSpends();
+  if (id === 'memo') renderMemos();
+}
+
+/* ── Invest ── */
+function addInvest() {
+  const m = document.getElementById('inv-month').value;
+  const a = parseInt(document.getElementById('inv-amt').value);
+  const n = document.getElementById('inv-note').value.trim() || 'ETF 투자';
+  if (!m || !a || a <= 0) return alert('월과 금액을 입력해주세요.');
+  invests.unshift({ id: Date.now(), month: m, amt: a, note: n });
+  S.set('jt-invests', invests);
+  document.getElementById('inv-amt').value = '';
+  document.getElementById('inv-note').value = '';
+  renderInvests();
+  renderHome();
+}
+
+function delInvest(id) {
+  invests = invests.filter(x => x.id !== id);
+  S.set('jt-invests', invests);
+  renderInvests();
+  renderHome();
+}
+
+function renderInvests() {
+  const el = document.getElementById('invest-list');
+  if (!invests.length) { el.innerHTML = '<div class="empty">아직 기록이 없어요</div>'; } else {
+    el.innerHTML = invests.map(i =>
+      `<div class="list-item">
+        <div><div class="li-main">${i.note}</div><div class="li-sub">${i.month}</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="li-amt">${i.amt.toLocaleString()}원</span>
+          <button class="del-btn" onclick="delInvest(${i.id})">×</button>
+        </div>
+      </div>`
+    ).join('');
+  }
+  /* summary */
+  const sumEl = document.getElementById('invest-summary');
+  if (!invests.length) { sumEl.innerHTML = '<div class="empty">데이터가 없어요</div>'; return; }
+  const byMonth = {};
+  invests.forEach(i => { byMonth[i.month] = (byMonth[i.month]||0) + i.amt; });
+  sumEl.innerHTML = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6).map(([m,t]) =>
+    `<div class="list-item"><span class="li-sub" style="font-family:'DM Mono',monospace">${m}</span><span class="li-amt">${t.toLocaleString()}원</span></div>`
+  ).join('');
+}
+
+/* ── Spend ── */
+function addSpend() {
+  const d = document.getElementById('sp-date').value;
+  const c = document.getElementById('sp-cat').value;
+  const a = parseInt(document.getElementById('sp-amt').value);
+  const m = document.getElementById('sp-memo').value.trim();
+  if (!d || !a || a <= 0) return alert('날짜와 금액을 입력해주세요.');
+  spends.unshift({ id: Date.now(), date: d, cat: c, amt: a, memo: m });
+  S.set('jt-spends', spends);
+  document.getElementById('sp-amt').value = '';
+  document.getElementById('sp-memo').value = '';
+  renderSpends();
+  renderHome();
+}
+
+function delSpend(id) {
+  spends = spends.filter(x => x.id !== id);
+  S.set('jt-spends', spends);
+  renderSpends();
+  renderHome();
+}
+
+function renderSpends() {
+  const thisMonth = todayMonth();
+  const thisMonthSpends = spends.filter(s => s.date.slice(0,7) === thisMonth);
+  const total = thisMonthSpends.reduce((s,x)=>s+x.amt,0);
+  const tr = document.getElementById('spend-total-row');
+  const el = document.getElementById('spend-list');
+  if (!thisMonthSpends.length) {
+    tr.style.display = 'none';
+    el.innerHTML = '<div class="empty">이번 달 기록이 없어요</div>';
+    return;
+  }
+  tr.style.display = 'flex';
+  document.getElementById('spend-total').textContent = total.toLocaleString()+'원';
+  el.innerHTML = thisMonthSpends.map(s =>
+    `<div class="list-item">
+      <div><div class="li-main"><span class="cat-dot" style="background:${catColors[s.cat]||'#9e9d97'}"></span>${s.cat}${s.memo?' · '+s.memo:''}</div><div class="li-sub">${s.date}</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="li-amt">${s.amt.toLocaleString()}원</span>
+        <button class="del-btn" onclick="delSpend(${s.id})">×</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+/* ── Memo ── */
+function addMemo() {
+  const tag  = document.getElementById('memo-tag-sel').value;
+  const text = document.getElementById('memo-text').value.trim();
+  if (!text) return alert('내용을 입력해주세요.');
+  const d = new Date();
+  const dateStr = d.getFullYear()+'.'+(d.getMonth()+1).toString().padStart(2,'0')+'.'+d.getDate().toString().padStart(2,'0');
+  memos.unshift({ id: Date.now(), tag, text, date: dateStr });
+  S.set('jt-memos', memos);
+  document.getElementById('memo-text').value = '';
+  renderMemos();
+}
+
+function delMemo(id) {
+  memos = memos.filter(x => x.id !== id);
+  S.set('jt-memos', memos);
+  renderMemos();
+}
+
+function renderMemos() {
+  const el = document.getElementById('memo-list');
+  if (!memos.length) { el.innerHTML = '<div class="empty">아직 메모가 없어요</div>'; return; }
+  el.innerHTML = memos.map(m =>
+    `<div class="memo-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <span class="memo-tag ${tagClass[m.tag]||'tag-etc'}">${tagLabel[m.tag]||m.tag}</span>
+        <button class="del-btn" onclick="delMemo(${m.id})">×</button>
+      </div>
+      <div class="memo-body">${m.text}</div>
+      <div class="memo-date">${m.date}</div>
+    </div>`
+  ).join('');
+}
+
+/* ── ISA Calc ── */
+function calcISA() {
+  const p = parseInt(document.getElementById('isa-profit').value) || 0;
+  if (!p) { document.getElementById('isa-result').style.display='none'; return; }
+  const normal = Math.round(p * 0.154);
+  const isa = p > 2000000 ? Math.round((p-2000000)*0.099) : 0;
+  const save = normal - isa;
+  document.getElementById('isa-normal').textContent = normal.toLocaleString()+'원';
+  document.getElementById('isa-tax').textContent = isa.toLocaleString()+'원';
+  document.getElementById('isa-save').textContent = '+'+save.toLocaleString()+'원';
+  document.getElementById('isa-result').style.display='block';
+}
+
+/* ── Home ── */
+function renderHome() {
+  const total = invests.reduce((s,x)=>s+x.amt,0);
+  document.getElementById('home-total').textContent = fmt(total);
+
+  const thisMonth = todayMonth();
+  const monthSpend = spends.filter(s=>s.date.slice(0,7)===thisMonth).reduce((s,x)=>s+x.amt,0);
+  document.getElementById('home-spend').textContent = fmt(monthSpend);
+
+  const monthInvest = invests.filter(i=>i.month===thisMonth).reduce((s,x)=>s+x.amt,0);
+  const pct = Math.min(Math.round(monthInvest/500000*100), 100);
+  document.getElementById('home-prog-val').textContent = fmt(monthInvest)+' / 50만원';
+  document.getElementById('home-prog-bar').style.width = pct+'%';
+
+  const recent = invests.slice(0,3);
+  const rEl = document.getElementById('home-recent-invest');
+  if (!recent.length) { rEl.innerHTML = '<div class="empty">아직 기록이 없어요</div>'; }
+  else {
+    rEl.innerHTML = recent.map(i =>
+      `<div class="list-item"><div><div class="li-main">${i.note}</div><div class="li-sub">${i.month}</div></div><span class="li-amt">${i.amt.toLocaleString()}원</span></div>`
+    ).join('');
+  }
+}
+
+/* Init */
+const now = new Date();
+document.getElementById('header-date').textContent =
+  now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 ('+['일','월','화','수','목','금','토'][now.getDay()]+'요일)';
+document.getElementById('inv-month').value = todayMonth();
+document.getElementById('sp-date').value   = today();
+
+renderHome();
+renderMemos();
+</script>
+</body>
+</html>
