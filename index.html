@@ -137,6 +137,23 @@
   /* 지출 차트 */
   .mini-chart-wrap { margin-top: 4px; }
   .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  /* 환율 */
+  .exchange-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .exchange-rate-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .exchange-rate-flag { font-size: 20px; margin-bottom: 4px; }
+  .exchange-rate-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .exchange-rate-val { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .exchange-rate-change { font-size: 11px; margin-top: 3px; }
+  .exchange-calc-wrap { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .exchange-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .exchange-input-row input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; font-family: 'DM Mono', monospace; background: var(--surface); color: var(--text); outline: none; }
+  .exchange-input-row input:focus { border-color: var(--green); }
+  .exchange-input-row select { padding: 10px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); color: var(--text); outline: none; font-family: 'Noto Sans KR', sans-serif; }
+  .exchange-result { background: var(--green-bg); border-radius: var(--radius-sm); padding: 14px 16px; text-align: center; }
+  .exchange-result-val { font-size: 24px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .exchange-result-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .exchange-updated { font-size: 11px; color: var(--text3); text-align: right; margin-top: 8px; }
+
   /* 대출 */
   .loan-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
   .loan-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -268,7 +285,10 @@
 
   <div class="content">
     <div class="page active" id="page-home">
-      <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="home-ex-row">
+          <span style="font-size:12px;background:var(--surface2);padding:4px 10px;border-radius:20px;color:var(--text2)" id="home-exchange">환율 로딩중...</span>
+        </div>
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr">
         <div class="stat-box"><div class="s-label">총 자산</div><div class="s-val green" id="home-total">0원</div></div>
         <div class="stat-box"><div class="s-label">이번 달 지출</div><div class="s-val" id="home-spend">0원</div></div>
         <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
@@ -523,6 +543,50 @@
   </div>
 
     <!-- 설정 페이지 -->
+    <!-- 환율 계산기 페이지 -->
+    <div class="page" id="page-exchange">
+      <div class="card">
+        <div class="card-label">실시간 환율 <span id="ex-status" style="font-size:11px;color:var(--text3);font-weight:400;margin-left:6px"></span></div>
+        <div class="exchange-hero" id="ex-rates-grid">
+          <div class="exchange-rate-box"><div class="exchange-rate-flag">🇺🇸</div><div class="exchange-rate-label">USD</div><div class="exchange-rate-val" id="ex-usd">-</div><div class="exchange-rate-change" id="ex-usd-ch"></div></div>
+          <div class="exchange-rate-box"><div class="exchange-rate-flag">🇯🇵</div><div class="exchange-rate-label">JPY (100엔)</div><div class="exchange-rate-val" id="ex-jpy">-</div><div class="exchange-rate-change" id="ex-jpy-ch"></div></div>
+          <div class="exchange-rate-box"><div class="exchange-rate-flag">🇪🇺</div><div class="exchange-rate-label">EUR</div><div class="exchange-rate-val" id="ex-eur">-</div><div class="exchange-rate-change" id="ex-eur-ch"></div></div>
+          <div class="exchange-rate-box"><div class="exchange-rate-flag">🇨🇳</div><div class="exchange-rate-label">CNY</div><div class="exchange-rate-val" id="ex-cny">-</div><div class="exchange-rate-change" id="ex-cny-ch"></div></div>
+        </div>
+        <div class="exchange-updated" id="ex-updated"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">환율 계산기</div>
+        <div class="exchange-calc-wrap" style="margin-top:0;padding-top:0;border-top:none">
+          <div class="exchange-input-row">
+            <input type="text" inputmode="numeric" id="ex-amount" placeholder="금액 입력" oninput="calcExchange()" />
+            <select id="ex-from" onchange="calcExchange()">
+              <option value="KRW">KRW 원</option>
+              <option value="USD">USD 달러</option>
+              <option value="JPY">JPY 엔</option>
+              <option value="EUR">EUR 유로</option>
+              <option value="CNY">CNY 위안</option>
+            </select>
+          </div>
+          <div style="text-align:center;font-size:20px;color:var(--text3);margin-bottom:10px">⇅</div>
+          <div class="exchange-input-row">
+            <div style="flex:1"></div>
+            <select id="ex-to" onchange="calcExchange()">
+              <option value="USD">USD 달러</option>
+              <option value="KRW">KRW 원</option>
+              <option value="JPY">JPY 엔</option>
+              <option value="EUR">EUR 유로</option>
+              <option value="CNY">CNY 위안</option>
+            </select>
+          </div>
+          <div class="exchange-result" id="ex-result" style="display:none">
+            <div class="exchange-result-val" id="ex-result-val">-</div>
+            <div class="exchange-result-label" id="ex-result-label"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 대출 페이지 -->
     <div class="page" id="page-loan">
 
@@ -705,6 +769,7 @@
     <button class="nav-btn" data-page="savings" onclick="goPage('savings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
     <button class="nav-btn" data-page="invest" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
     <button class="nav-btn" data-page="etf" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" data-page="exchange" onclick="goPage('exchange',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>환율</button>
     <button class="nav-btn" data-page="loan" onclick="goPage('loan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>대출</button>
     <button class="nav-btn" data-page="assets" onclick="goPage('assets',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/></svg>자산</button>
     <button class="nav-btn" data-page="memo" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
@@ -970,7 +1035,7 @@ function renderLoans() {
           <button class="btn-edit-cancel" onclick="toggleLoanEdit('${l.id}')">취소</button>
         </div>
       </div>` : '';
-    return `<div class="loan-item" style="cursor:pointer" onclick="event.target.closest('button')||toggleLoanEdit('${l.id}')">
+    return `<div class="loan-item" style="cursor:pointer" onclick="if(event.target.closest('button')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleLoanEdit('${l.id}')">
       <div class="loan-top">
         <div>
           <div class="loan-name">${l.name}</div>
@@ -1105,7 +1170,7 @@ function renderAssets() {
         </div>
       </div>` : '';
     return `
-    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="event.target.closest('button')||toggleAssetEdit('${a.id}')">
+    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="if(event.target.closest('button')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleAssetEdit('${a.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="asset-item-left">
           <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
@@ -1332,6 +1397,7 @@ var DEFAULT_TABS = [
   {id:'savings', label:'예적금', svg:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>'},
   {id:'invest', label:'투자', svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'etf', label:'ETF', svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'exchange', label:'환율', svg:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'loan', label:'대출', svg:'<path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/>'},
   {id:'assets', label:'자산', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/>'},
   {id:'memo', label:'메모', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'}
@@ -1522,6 +1588,72 @@ window.saveTabOrder = function() {
   alert('저장됐어요! ✓');
 };
 
+// ── 환율 ──
+var exRates = {}; // KRW 기준 각 통화 비율
+
+async function fetchExchangeRates() {
+  try {
+    document.getElementById('ex-status').textContent = '불러오는 중...';
+    // 무료 API: frankfurter.app (EUR 기준) → KRW 환산
+    var res = await fetch('https://api.frankfurter.app/latest?from=KRW&to=USD,JPY,EUR,CNY');
+    var data = await res.json();
+    // data.rates: KRW→각 통화 환율 (예: USD: 0.00073)
+    // 역수 = 1외화당 원화
+    exRates['KRW'] = 1;
+    exRates['USD'] = Math.round(1 / data.rates.USD);
+    exRates['JPY'] = Math.round(100 / data.rates.JPY); // 100엔당 원화
+    exRates['EUR'] = Math.round(1 / data.rates.EUR);
+    exRates['CNY'] = Math.round(1 / data.rates.CNY);
+
+    // 표시
+    var fmt2 = n => n.toLocaleString() + '원';
+    document.getElementById('ex-usd').textContent = fmt2(exRates['USD']);
+    document.getElementById('ex-jpy').textContent = fmt2(exRates['JPY']);
+    document.getElementById('ex-eur').textContent = fmt2(exRates['EUR']);
+    document.getElementById('ex-cny').textContent = fmt2(exRates['CNY']);
+
+    var now = new Date();
+    document.getElementById('ex-updated').textContent = '업데이트: ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('ex-status').textContent = '✓ 최신';
+    document.getElementById('ex-status').style.color = 'var(--green)';
+
+    // 홈 환율 배지도 업데이트
+    var homeEx = document.getElementById('home-exchange');
+    if(homeEx) homeEx.textContent = '1달러 = ' + exRates['USD'].toLocaleString() + '원';
+
+    calcExchange();
+  } catch(e) {
+    document.getElementById('ex-status').textContent = '불러오기 실패';
+    console.log('환율 오류:', e);
+  }
+}
+
+window.calcExchange = function() {
+  var rawAmt = (document.getElementById('ex-amount').value||'').replace(/[^0-9.]/g,'');
+  var amt = parseFloat(rawAmt) || 0;
+  var from = document.getElementById('ex-from').value;
+  var to   = document.getElementById('ex-to').value;
+  if(!amt || !exRates[from] || !exRates[to]) {
+    document.getElementById('ex-result').style.display='none';
+    return;
+  }
+  // 환산: from → KRW → to
+  var inKRW = from === 'KRW' ? amt : (from === 'JPY' ? amt * exRates['JPY'] / 100 : amt * exRates[from]);
+  var result;
+  if(to === 'KRW') result = inKRW;
+  else if(to === 'JPY') result = inKRW / exRates['JPY'] * 100;
+  else result = inKRW / exRates[to];
+
+  var resultStr = to === 'KRW'
+    ? result.toLocaleString('ko-KR', {maximumFractionDigits:0}) + '원'
+    : result.toLocaleString('en-US', {maximumFractionDigits:2}) + ' ' + to;
+
+  document.getElementById('ex-result').style.display = 'block';
+  document.getElementById('ex-result-val').textContent = resultStr;
+  document.getElementById('ex-result-label').textContent =
+    amt.toLocaleString() + ' ' + from + ' → ' + resultStr;
+};
+
 window.goPage = (id,btn) => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -1531,6 +1663,7 @@ window.goPage = (id,btn) => {
   if(id==='settings') renderTabSortList();
   if(id==='assets') renderAssets();
   if(id==='loan') renderLoans();
+  if(id==='exchange') fetchExchangeRates();
 };
 
 // ── 결혼자금 트래커 ──
