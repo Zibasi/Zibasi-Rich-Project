@@ -734,11 +734,11 @@ function fmt(n) {
   return n.toLocaleString() + '원';
 }
 // 입력 필드 콤마 포맷
-function formatComma(el) {
+window.formatComma = function(el) {
   var raw = el.value.replace(/[^0-9]/g, '');
   if(raw === '') { el.value = ''; return; }
   el.value = parseInt(raw).toLocaleString();
-}
+};
 // 콤마 제거해서 숫자 반환
 function getVal(id) {
   var el = document.getElementById(id);
