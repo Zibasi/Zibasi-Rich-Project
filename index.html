@@ -137,6 +137,26 @@
   /* 지출 차트 */
   .mini-chart-wrap { margin-top: 4px; }
   .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  /* 자산 현황 */
+  .asset-total-hero { text-align: center; padding: 16px 0 20px; }
+  .asset-total-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
+  .asset-total-val { font-size: 32px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .asset-total-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .asset-cat-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .asset-cat-chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; }
+  .asset-cat-chip.active { border-color: currentColor; }
+  .asset-item { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .asset-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .asset-item-left { display: flex; align-items: center; gap: 10px; }
+  .asset-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .asset-name { font-size: 14px; font-weight: 500; }
+  .asset-cat-badge { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .asset-amt { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .asset-del { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .asset-pie-wrap { display: flex; gap: 16px; align-items: center; margin-top: 4px; }
+  .asset-pie-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+  .asset-legend-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .asset-legend-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; display: inline-block; }
   .mini-bar-label { font-size: 12px; color: var(--text2); min-width: 52px; }
   .mini-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
   .mini-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
@@ -226,7 +246,7 @@
   <div class="content">
     <div class="page active" id="page-home">
       <div class="stat-grid" style="grid-template-columns:1fr 1fr">
-        <div class="stat-box"><div class="s-label">총 투자금</div><div class="s-val green" id="home-total">0원</div></div>
+        <div class="stat-box"><div class="s-label">총 자산</div><div class="s-val green" id="home-total">0원</div></div>
         <div class="stat-box"><div class="s-label">이번 달 지출</div><div class="s-val" id="home-spend">0원</div></div>
         <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
         <div class="stat-box"><div class="s-label">이달 저축 가능</div><div class="s-val green" id="home-surplus">0원</div></div>
@@ -480,6 +500,57 @@
   </div>
 
     <!-- 설정 페이지 -->
+    <!-- 자산 현황 페이지 -->
+    <div class="page" id="page-assets">
+
+      <!-- 총 자산 요약 -->
+      <div class="card">
+        <div class="asset-total-hero">
+          <div class="asset-total-label">총 자산</div>
+          <div class="asset-total-val" id="asset-grand-total">0원</div>
+          <div class="asset-total-sub" id="asset-count-label">자산을 추가해보세요</div>
+        </div>
+        <!-- 카테고리별 비중 바 -->
+        <div id="asset-cat-bars"></div>
+      </div>
+
+      <!-- 자산 추가 -->
+      <div class="card">
+        <div class="card-label">자산 추가</div>
+        <div class="form-row"><label>이름</label><input type="text" id="as-name" placeholder="카카오뱅크 CMA" /></div>
+        <div class="form-row"><label>카테고리</label>
+          <select id="as-cat">
+            <option value="현금·예금">현금·예금</option>
+            <option value="주식·ETF">주식·ETF</option>
+            <option value="연금·IRP">연금·IRP</option>
+            <option value="청약">청약</option>
+            <option value="부동산">부동산</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-row"><label>금액 (원)</label><input type="text" inputmode="numeric" id="as-amt" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>메모</label><input type="text" id="as-memo" placeholder="비상금 전용" /></div>
+        <button class="btn btn-primary" onclick="addAsset()">추가</button>
+      </div>
+
+      <!-- 자산 목록 -->
+      <div class="card">
+        <div class="card-label">자산 목록</div>
+        <!-- 카테고리 필터 -->
+        <div class="asset-cat-row" id="asset-filter-row">
+          <span class="asset-cat-chip active" data-cat="" onclick="filterAssets('',this)" style="color:var(--text2);background:var(--surface2)">전체</span>
+          <span class="asset-cat-chip" data-cat="현금·예금" onclick="filterAssets('현금·예금',this)" style="color:#1e5fa8;background:#e8f0fb">현금·예금</span>
+          <span class="asset-cat-chip" data-cat="주식·ETF" onclick="filterAssets('주식·ETF',this)" style="color:#1a7a58;background:#e8f5ef">주식·ETF</span>
+          <span class="asset-cat-chip" data-cat="연금·IRP" onclick="filterAssets('연금·IRP',this)" style="color:#7c3aed;background:#f3e8ff">연금·IRP</span>
+          <span class="asset-cat-chip" data-cat="청약" onclick="filterAssets('청약',this)" style="color:#b45309;background:#fef3e2">청약</span>
+          <span class="asset-cat-chip" data-cat="부동산" onclick="filterAssets('부동산',this)" style="color:#c0392b;background:#fef2f2">부동산</span>
+          <span class="asset-cat-chip" data-cat="기타" onclick="filterAssets('기타',this)" style="color:var(--text2);background:var(--surface2)">기타</span>
+        </div>
+        <div id="asset-list"><div class="empty">등록된 자산이 없어요</div></div>
+      </div>
+
+    </div>
+
     <div class="page" id="page-settings">
 
       <!-- 기본 재무 정보 -->
@@ -561,6 +632,7 @@
     <button class="nav-btn" data-page="savings" onclick="goPage('savings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
     <button class="nav-btn" data-page="invest" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
     <button class="nav-btn" data-page="etf" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" data-page="assets" onclick="goPage('assets',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/></svg>자산</button>
     <button class="nav-btn" data-page="memo" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
     <button class="nav-btn" data-page="settings" onclick="goPage('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>설정</button>
   </nav>
@@ -650,7 +722,7 @@ onAuthStateChanged(auth, async (user) => {
     uid=user.uid;
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings()]);
+    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets()]);
     renderHome();
   } else {
     uid=null;
@@ -662,7 +734,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 const col = (name) => collection(db,'users',uid,name);
-let invests=[],spends=[],memos=[],savings=[];
+let invests=[],spends=[],memos=[],savings=[],assets=[];
 
 async function loadInvests() {
   const snap=await getDocs(query(col('invests'),orderBy('createdAt','desc')));
@@ -676,6 +748,11 @@ async function loadMemos() {
   const snap=await getDocs(query(col('memos'),orderBy('createdAt','desc')));
   memos=snap.docs.map(d=>({id:d.id,...d.data()})); renderMemos();
 }
+async function loadAssets() {
+  const snap=await getDocs(query(col('assets'),orderBy('createdAt','desc')));
+  assets=snap.docs.map(d=>({id:d.id,...d.data()})); renderAssets();
+}
+
 async function loadSavings() {
   const snap=await getDocs(query(col('savings'),orderBy('createdAt','desc')));
   savings=snap.docs.map(d=>({id:d.id,...d.data()})); renderSavings();
@@ -704,6 +781,93 @@ window.delSavings = async (id) => {
   await deleteDoc(doc(db,'users',uid,'savings',id));
   savings=savings.filter(x=>x.id!==id); renderSavings();
 };
+// ── 자산 현황 ──
+var assetColors = {
+  '현금·예금': '#1e5fa8',
+  '주식·ETF':  '#1a7a58',
+  '연금·IRP':  '#7c3aed',
+  '청약':      '#b45309',
+  '부동산':    '#c0392b',
+  '기타':      '#9e9d97'
+};
+var assetFilter = '';
+
+window.addAsset = async () => {
+  var name = document.getElementById('as-name').value.trim();
+  var cat  = document.getElementById('as-cat').value;
+  var amt  = getVal('as-amt');
+  var memo = document.getElementById('as-memo').value.trim();
+  if(!name || !amt) return alert('이름과 금액을 입력해주세요.');
+  var data = {name, cat, amt, memo, createdAt: Date.now()};
+  var ref  = await addDoc(col('assets'), data);
+  assets.unshift({id: ref.id, ...data});
+  playBeep();
+  document.getElementById('as-name').value = '';
+  document.getElementById('as-amt').value  = '';
+  document.getElementById('as-memo').value = '';
+  renderAssets();
+  renderHome();
+};
+
+window.delAsset = async (id) => {
+  if(!confirm('삭제할까요?')) return;
+  await deleteDoc(doc(db,'users',uid,'assets',id));
+  assets = assets.filter(x=>x.id!==id);
+  renderAssets(); renderHome();
+};
+
+window.filterAssets = (cat, el) => {
+  assetFilter = cat;
+  document.querySelectorAll('.asset-cat-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderAssets();
+};
+
+function renderAssets() {
+  var list = assetFilter ? assets.filter(a=>a.cat===assetFilter) : assets;
+  var grand = assets.reduce((s,a)=>s+a.amt, 0);
+  var el    = document.getElementById('asset-list');
+
+  // 총 자산
+  document.getElementById('asset-grand-total').textContent = fmt(grand);
+  document.getElementById('asset-count-label').textContent = assets.length ? '총 '+assets.length+'개 자산' : '자산을 추가해보세요';
+
+  // 카테고리별 비중 바
+  var catTotals = {};
+  assets.forEach(a=>{ catTotals[a.cat]=(catTotals[a.cat]||0)+a.amt; });
+  var bars = document.getElementById('asset-cat-bars');
+  if(assets.length) {
+    bars.innerHTML = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>`
+      <div class="mini-bar-row" style="margin-bottom:8px">
+        <span style="font-size:12px;color:var(--text2);min-width:68px"><span class="asset-legend-dot" style="background:${assetColors[cat]||'#9e9d97'}"></span>${cat}</span>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(amt/grand*100)}%;background:${assetColors[cat]||'#9e9d97'}"></div></div>
+        <span style="font-size:12px;color:var(--text2);min-width:48px;text-align:right">${Math.round(amt/grand*100)}%</span>
+      </div>`).join('');
+  } else { bars.innerHTML=''; }
+
+  // 목록
+  if(!list.length) { el.innerHTML='<div class="empty">'+(assetFilter?assetFilter+' 자산이 없어요':'등록된 자산이 없어요')+'</div>'; return; }
+
+  // 카테고리별 소계
+  var catSub = {};
+  list.forEach(a=>{ catSub[a.cat]=(catSub[a.cat]||0)+a.amt; });
+
+  el.innerHTML = list.map(a=>`
+    <div class="asset-item">
+      <div class="asset-item-left">
+        <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
+        <div>
+          <div class="asset-name">${a.name}</div>
+          <div class="asset-cat-badge">${a.cat}${a.memo?' · '+a.memo:''}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="asset-amt">${fmt(a.amt)}</span>
+        <button class="asset-del" onclick="delAsset('${a.id}')">×</button>
+      </div>
+    </div>`).join('');
+}
+
 function renderSavings() {
   const el=document.getElementById('savings-list');
   const sumEl=document.getElementById('savings-summary');
@@ -870,7 +1034,7 @@ window.calcISA = () => {
 };
 
 function renderHome() {
-  const total=invests.reduce((s,x)=>s+x.amt,0);
+  const total=assets.reduce((s,a)=>s+a.amt,0);
   document.getElementById('home-total').textContent=fmt(total);
   const tm=thisMonth();
   const mSpend=spends.filter(s=>s.date.slice(0,7)===tm).reduce((s,x)=>s+x.amt,0);
@@ -904,6 +1068,7 @@ var DEFAULT_TABS = [
   {id:'savings', label:'예적금', svg:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>'},
   {id:'invest', label:'투자', svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'etf', label:'ETF', svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'assets', label:'자산', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/>'},
   {id:'memo', label:'메모', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'}
 ];
 var tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(t=>t.id);
@@ -1073,6 +1238,7 @@ window.goPage = (id,btn) => {
   btn.classList.add('active');
   if(id==='cashflow') renderCashflow();
   if(id==='settings') renderTabSortList();
+  if(id==='assets') renderAssets();
 };
 
 // ── 결혼자금 트래커 ──
