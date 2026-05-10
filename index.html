@@ -659,12 +659,12 @@
         </div>
       </div>
 
-      <!-- 탭 순서 변경 -->
+      <!-- 탭 관리 -->
       <div class="card">
-        <div class="card-label">탭 순서 변경</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">드래그해서 순서를 바꿔보세요</div>
+        <div class="card-label">탭 관리</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 탭이 숨겨져요 · 드래그로 순서 변경</div>
         <div id="tab-sort-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="saveTabOrder()">순서 저장</button>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="saveTabOrder()">저장</button>
       </div>
 
       <!-- 데이터 관리 -->
@@ -1234,15 +1234,20 @@ var DEFAULT_TABS = [
   {id:'memo', label:'메모', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'}
 ];
 var tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(t=>t.id);
+var hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
 
 function renderNav() {
   var nav = document.querySelector('.bottom-nav');
-  // 설정 버튼은 항상 마지막 고정
   var settingBtn = nav.querySelector('[data-page="settings"]');
-  // 순서대로 버튼 재배치
   tabOrder.forEach(function(id) {
     var btn = nav.querySelector('[data-page="'+id+'"]');
-    if(btn) nav.insertBefore(btn, settingBtn || null);
+    if(!btn) return;
+    if(hiddenTabs.includes(id)) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      nav.insertBefore(btn, settingBtn || null);
+    }
   });
 }
 
@@ -1252,32 +1257,50 @@ function renderTabSortList() {
   tabOrder.forEach(function(id, i) {
     var tab = DEFAULT_TABS.find(t=>t.id===id);
     if(!tab) return;
+    var hidden = hiddenTabs.includes(id);
     var item = document.createElement('div');
-    item.setAttribute('draggable','true');
+    item.setAttribute('draggable', !hidden);
     item.dataset.id = id;
     item.dataset.idx = i;
-    item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);cursor:grab;user-select:none;border:1.5px solid transparent;transition:border-color 0.15s';
-    item.innerHTML = '<span style="color:var(--text3);font-size:16px">☰</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">'+tab.svg+'</svg><span style="font-size:14px;font-weight:500">'+tab.label+'</span>';
-    item.addEventListener('dragstart', function(e) {
-      e.dataTransfer.setData('text/plain', i);
-      item.style.opacity='0.5';
-    });
-    item.addEventListener('dragend', function() { item.style.opacity='1'; });
-    item.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      item.style.borderColor='var(--green)';
-    });
-    item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
-    item.addEventListener('drop', function(e) {
-      e.preventDefault();
-      item.style.borderColor='transparent';
-      var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-      var toIdx = i;
-      if(fromIdx===toIdx) return;
-      var moved = tabOrder.splice(fromIdx,1)[0];
-      tabOrder.splice(toIdx,0,moved);
+    item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);user-select:none;border:1.5px solid transparent;transition:all 0.15s;opacity:'+(hidden?'0.4':'1');
+    if(!hidden) item.style.cursor='grab';
+
+    // 체크박스
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !hidden;
+    cb.style.cssText = 'width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
+    cb.addEventListener('change', function() {
+      if(cb.checked) hiddenTabs = hiddenTabs.filter(h=>h!==id);
+      else hiddenTabs.push(id);
       renderTabSortList();
     });
+
+    item.innerHTML = '<span style="color:var(--text3);font-size:15px">'+(hidden?'':'☰')+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">'+tab.svg+'</svg><span style="font-size:14px;font-weight:500;flex:1">'+tab.label+'</span>';
+    item.insertBefore(cb, item.firstChild);
+
+    if(!hidden) {
+      item.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('text/plain', i);
+        item.style.opacity='0.4';
+      });
+      item.addEventListener('dragend', function() { item.style.opacity='1'; });
+      item.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        item.style.borderColor='var(--green)';
+      });
+      item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
+      item.addEventListener('drop', function(e) {
+        e.preventDefault();
+        item.style.borderColor='transparent';
+        var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+        var toIdx = i;
+        if(fromIdx===toIdx) return;
+        var moved = tabOrder.splice(fromIdx,1)[0];
+        tabOrder.splice(toIdx,0,moved);
+        renderTabSortList();
+      });
+    }
     list.appendChild(item);
   });
 }
@@ -1356,6 +1379,8 @@ window.resetAppSettings = function() {
 };
 
 function loadSettings() {
+  // 숨김 탭 로드
+  hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
   // 재무 설정
   var fs = JSON.parse(localStorage.getItem('financeSettings') || 'null');
   if(fs) {
@@ -1388,9 +1413,10 @@ function loadSettings() {
 
 window.saveTabOrder = function() {
   localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
+  localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
   renderNav();
-loadSettings();
-  alert('저장되었어요! ✓');
+  loadSettings();
+  alert('저장됐어요! ✓');
 };
 
 window.goPage = (id,btn) => {
