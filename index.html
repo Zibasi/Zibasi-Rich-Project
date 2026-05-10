@@ -167,6 +167,15 @@
   .asset-cat-badge { font-size: 10px; color: var(--text3); margin-top: 2px; }
   .asset-amt { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; }
   .asset-del { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .asset-edit-form { padding: 12px 0 4px; border-top: 1px solid var(--border); margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .asset-edit-row { display: flex; align-items: center; gap: 8px; }
+  .asset-edit-row label { font-size: 12px; color: var(--text2); min-width: 44px; }
+  .asset-edit-row input, .asset-edit-row select { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface); color: var(--text); outline: none; }
+  .asset-edit-row input:focus, .asset-edit-row select:focus { border-color: var(--green); }
+  .asset-edit-btns { display: flex; gap: 8px; margin-top: 4px; }
+  .asset-edit-btns button { flex: 1; padding: 8px; border-radius: var(--radius-sm); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; font-weight: 500; border: none; }
+  .btn-edit-save { background: var(--green); color: #fff; }
+  .btn-edit-cancel { background: var(--surface2); color: var(--text2); }
   .asset-pie-wrap { display: flex; gap: 16px; align-items: center; margin-top: 4px; }
   .asset-pie-legend { flex: 1; display: flex; flex-direction: column; gap: 7px; }
   .asset-legend-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
@@ -725,11 +734,15 @@ const tagClass = {etf:'tag-etf',basic:'tag-basic',tax:'tag-tax',word:'tag-word',
 const tagLabel = {etf:'ETF',basic:'주식 기초',tax:'세금/절세',word:'경제 용어',etc:'기타'};
 
 function fmt(n) {
-  if(n >= 100000000) return (n/100000000).toFixed(1).replace(/\.0$/, '') + '억원';
+  if(n >= 100000000) {
+    var uk = (n/100000000).toFixed(1).replace(/\.0$/, '');
+    return uk.toLocaleString() + '억원';
+  }
   if(n >= 10000) {
     var man = Math.floor(n / 10000);
     var rem = n % 10000;
-    return (rem > 0 ? man + '만 ' + rem.toLocaleString() + '원' : man + '만원');
+    var manStr = man.toLocaleString(); // 1,500만원
+    return (rem > 0 ? manStr + '만 ' + rem.toLocaleString() + '원' : manStr + '만원');
   }
   return n.toLocaleString() + '원';
 }
@@ -876,6 +889,30 @@ window.addLoan = async () => {
   renderLoans(); renderHome();
 };
 
+var editingLoanId = null;
+
+window.toggleLoanEdit = function(id) {
+  editingLoanId = editingLoanId === id ? null : id;
+  renderLoans();
+};
+
+window.saveLoanEdit = async function(id) {
+  var name      = document.getElementById('le-name-'+id).value.trim();
+  var type      = document.getElementById('le-type-'+id).value;
+  var principal = parseInt((document.getElementById('le-principal-'+id).value||'0').replace(/[^0-9]/g,''))||0;
+  var balance   = parseInt((document.getElementById('le-balance-'+id).value||'0').replace(/[^0-9]/g,''))||0;
+  var rate      = parseFloat(document.getElementById('le-rate-'+id).value)||0;
+  var monthly   = parseInt((document.getElementById('le-monthly-'+id).value||'0').replace(/[^0-9]/g,''))||0;
+  var due       = document.getElementById('le-due-'+id).value;
+  var memo      = document.getElementById('le-memo-'+id).value.trim();
+  if(!name||!balance) return alert('대출명과 잔액을 입력해주세요.');
+  await updateDoc(doc(db,'users',uid,'loans',id), {name,type,principal,balance,rate,monthly,due,memo});
+  var idx = loans.findIndex(l=>l.id===id);
+  if(idx>-1) loans[idx] = {...loans[idx],name,type,principal,balance,rate,monthly,due,memo};
+  editingLoanId = null;
+  renderLoans(); renderHome();
+};
+
 window.delLoan = async (id) => {
   if(!confirm('삭제할까요?')) return;
   await deleteDoc(doc(db,'users',uid,'loans',id));
@@ -913,13 +950,33 @@ function renderLoans() {
       var diff=Math.round((due-today)/(1000*60*60*24));
       ddayStr = diff>0?'만기 D-'+diff:(diff===0?'오늘 만기':'만기 D+'+Math.abs(diff));
     }
-    return `<div class="loan-item">
+    var isEditing = editingLoanId === l.id;
+    var editForm = isEditing ? `
+      <div class="asset-edit-form">
+        <div class="asset-edit-row"><label>대출명</label><input id="le-name-${l.id}" value="${l.name}" /></div>
+        <div class="asset-edit-row"><label>종류</label>
+          <select id="le-type-${l.id}">
+            ${['신용대출','전세대출','주택담보','학자금','기타'].map(t=>`<option value="${t}" ${l.type===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="asset-edit-row"><label>원금</label><input id="le-principal-${l.id}" value="${(l.principal||0).toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
+        <div class="asset-edit-row"><label>잔액</label><input id="le-balance-${l.id}" value="${l.balance.toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
+        <div class="asset-edit-row"><label>연이율</label><input id="le-rate-${l.id}" value="${l.rate||''}" type="number" step="0.01" placeholder="4.5" /></div>
+        <div class="asset-edit-row"><label>월상환</label><input id="le-monthly-${l.id}" value="${(l.monthly||0).toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
+        <div class="asset-edit-row"><label>만기일</label><input id="le-due-${l.id}" value="${l.due||''}" type="date" /></div>
+        <div class="asset-edit-row"><label>메모</label><input id="le-memo-${l.id}" value="${l.memo||''}" placeholder="메모" /></div>
+        <div class="asset-edit-btns">
+          <button class="btn-edit-save" onclick="saveLoanEdit('${l.id}')">저장</button>
+          <button class="btn-edit-cancel" onclick="toggleLoanEdit('${l.id}')">취소</button>
+        </div>
+      </div>` : '';
+    return `<div class="loan-item" style="cursor:pointer" onclick="event.target.closest('button')||toggleLoanEdit('${l.id}')">
       <div class="loan-top">
         <div>
           <div class="loan-name">${l.name}</div>
           <div style="margin-top:4px"><span class="loan-badge" style="background:${loanTypeColor[l.type]||'#9e9d97'}22;color:${loanTypeColor[l.type]||'#9e9d97'}">${l.type}</span>${ddayStr?'<span style="font-size:11px;color:var(--text3);margin-left:6px">'+ddayStr+'</span>':''}</div>
         </div>
-        <button class="asset-del" onclick="delLoan('${l.id}')">×</button>
+        <button class="asset-del" onclick="event.stopPropagation();delLoan('${l.id}')">×</button>
       </div>
       <div class="loan-row"><span>현재 잔액</span><span style="color:var(--red);font-weight:600">${fmt(l.balance)}</span></div>
       ${l.rate?`<div class="loan-row"><span>연이율</span><span>${l.rate}%</span></div>`:''}
@@ -930,6 +987,7 @@ function renderLoans() {
         <div class="loan-prog-label"><span>상환률</span><span>${paidPct}%</span></div>
         <div class="loan-prog-track"><div class="loan-prog-fill" style="width:${paidPct}%;background:var(--green)"></div></div>
       </div>`:''}
+      ${editForm}
     </div>`;
   }).join('');
 }
@@ -969,6 +1027,30 @@ window.delAsset = async (id) => {
   renderAssets(); renderHome();
 };
 
+var editingAssetId = null;
+
+window.toggleAssetEdit = function(id) {
+  editingAssetId = editingAssetId === id ? null : id;
+  renderAssets();
+};
+
+window.saveAssetEdit = async function(id) {
+  var nameEl = document.getElementById('ae-name-'+id);
+  var catEl  = document.getElementById('ae-cat-'+id);
+  var amtEl  = document.getElementById('ae-amt-'+id);
+  var memoEl = document.getElementById('ae-memo-'+id);
+  var name = nameEl.value.trim();
+  var cat  = catEl.value;
+  var amt  = parseInt((amtEl.value||'0').replace(/[^0-9]/g,''))||0;
+  var memo = memoEl.value.trim();
+  if(!name||!amt) return alert('이름과 금액을 입력해주세요.');
+  await updateDoc(doc(db,'users',uid,'assets',id), {name,cat,amt,memo});
+  var idx = assets.findIndex(a=>a.id===id);
+  if(idx>-1) assets[idx] = {...assets[idx],name,cat,amt,memo};
+  editingAssetId = null;
+  renderAssets(); renderHome();
+};
+
 window.filterAssets = (cat, el) => {
   assetFilter = cat;
   document.querySelectorAll('.asset-cat-chip').forEach(c=>c.classList.remove('active'));
@@ -1005,20 +1087,41 @@ function renderAssets() {
   var catSub = {};
   list.forEach(a=>{ catSub[a.cat]=(catSub[a.cat]||0)+a.amt; });
 
-  el.innerHTML = list.map(a=>`
-    <div class="asset-item">
-      <div class="asset-item-left">
-        <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
-        <div>
-          <div class="asset-name">${a.name}</div>
-          <div class="asset-cat-badge">${a.cat}${a.memo?' · '+a.memo:''}</div>
+  el.innerHTML = list.map(a=>{
+    var isEditing = editingAssetId === a.id;
+    var editForm = isEditing ? `
+      <div class="asset-edit-form">
+        <div class="asset-edit-row"><label>이름</label><input id="ae-name-${a.id}" value="${a.name}" /></div>
+        <div class="asset-edit-row"><label>카테고리</label>
+          <select id="ae-cat-${a.id}">
+            ${['현금·예금','주식·ETF','연금·IRP','청약','부동산','기타'].map(c=>`<option value="${c}" ${a.cat===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="asset-edit-row"><label>금액</label><input id="ae-amt-${a.id}" value="${a.amt.toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
+        <div class="asset-edit-row"><label>메모</label><input id="ae-memo-${a.id}" value="${a.memo||''}" placeholder="메모" /></div>
+        <div class="asset-edit-btns">
+          <button class="btn-edit-save" onclick="saveAssetEdit('${a.id}')">저장</button>
+          <button class="btn-edit-cancel" onclick="toggleAssetEdit('${a.id}')">취소</button>
+        </div>
+      </div>` : '';
+    return `
+    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="event.target.closest('button')||toggleAssetEdit('${a.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="asset-item-left">
+          <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
+          <div>
+            <div class="asset-name">${a.name}</div>
+            <div class="asset-cat-badge">${a.cat}${a.memo?' · '+a.memo:''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="asset-amt" style="color:${isEditing?'var(--green)':'inherit'}">${fmt(a.amt)}</span>
+          <button class="asset-del" onclick="event.stopPropagation();delAsset('${a.id}')">×</button>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="asset-amt">${fmt(a.amt)}</span>
-        <button class="asset-del" onclick="delAsset('${a.id}')">×</button>
-      </div>
-    </div>`).join('');
+      ${editForm}
+    </div>`;
+  }).join('');
 }
 
 function renderSavings() {
