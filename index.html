@@ -37,7 +37,7 @@
   .sync-badge { display: inline-block; font-size: 10px; background: var(--green-bg); color: var(--green); padding: 2px 7px; border-radius: 10px; margin-left: 6px; font-weight: 600; vertical-align: middle; }
 
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0 env(safe-area-inset-bottom, 8px); z-index: 100; }
-  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; background: none; border: none; cursor: pointer; color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 10px; transition: color 0.15s; }
+  .nav-btn { flex: 0 0 auto; min-width: 64px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 8px; background: none; border: none; cursor: pointer; color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 10px; transition: color 0.15s; }
   .nav-btn svg { width: 22px; height: 22px; stroke-width: 1.6; }
   .nav-btn.active { color: var(--green); }
 
@@ -479,16 +479,16 @@
     </div>
   </div>
 
-  <nav class="bottom-nav" style="flex-wrap:wrap;height:auto">
-    <button class="nav-btn active" onclick="goPage('home',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
-    <button class="nav-btn" onclick="goPage('spend',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>가계부</button>
-    <button class="nav-btn" onclick="goPage('cashflow',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>수지</button>
-    <button class="nav-btn" onclick="goPage('wedding',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>결혼</button>
-    <button class="nav-btn" onclick="goPage('pension',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>연금</button>
-    <button class="nav-btn" onclick="goPage('savings',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
-    <button class="nav-btn" onclick="goPage('invest',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
-    <button class="nav-btn" onclick="goPage('etf',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
-    <button class="nav-btn" onclick="goPage('memo',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
+  <nav class="bottom-nav" style="overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    <button class="nav-btn active" onclick="goPage('home',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
+    <button class="nav-btn" onclick="goPage('spend',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>가계부</button>
+    <button class="nav-btn" onclick="goPage('cashflow',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>수지</button>
+    <button class="nav-btn" onclick="goPage('wedding',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>결혼</button>
+    <button class="nav-btn" onclick="goPage('pension',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>연금</button>
+    <button class="nav-btn" onclick="goPage('savings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
+    <button class="nav-btn" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
+    <button class="nav-btn" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
   </nav>
 </div>
 
@@ -514,8 +514,14 @@ const tagClass = {etf:'tag-etf',basic:'tag-basic',tax:'tag-tax',word:'tag-word',
 const tagLabel = {etf:'ETF',basic:'주식 기초',tax:'세금/절세',word:'경제 용어',etc:'기타'};
 
 function fmt(n) {
-  if(n>=10000000) return (n/10000000).toFixed(1).replace(/\.0$/,'')+'천만원';
-  if(n>=10000) return Math.floor(n/10000)+'만원';
+  if(n >= 100000000) return (n/100000000).toFixed(1).replace(/\.0$/, '') + '억원';
+  if(n >= 10000) {
+    var man = Math.floor(n / 10000);
+    var rem = n % 10000;
+    return (rem > 0 ? man + '만 ' + rem.toLocaleString() + '원' : man + '만원');
+  }
+  return n.toLocaleString() + '원';
+}
   return n.toLocaleString()+'원';
 }
 const todayStr = () => new Date().toISOString().slice(0,10);
