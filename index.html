@@ -137,6 +137,20 @@
   /* 지출 차트 */
   .mini-chart-wrap { margin-top: 4px; }
   .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  /* 대출 */
+  .loan-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .loan-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .loan-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .loan-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .loan-name { font-size: 14px; font-weight: 600; }
+  .loan-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; background: #fef2f2; color: var(--red); }
+  .loan-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .loan-row span:last-child { font-weight: 500; color: var(--text); }
+  .loan-prog-wrap { margin-top: 8px; }
+  .loan-prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .loan-prog-track { height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .loan-prog-fill { height: 100%; border-radius: 4px; background: var(--red); transition: width 0.4s; }
+
   /* 자산 현황 */
   .asset-total-hero { text-align: center; padding: 16px 0 20px; }
   .asset-total-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; }
@@ -500,6 +514,56 @@
   </div>
 
     <!-- 설정 페이지 -->
+    <!-- 대출 페이지 -->
+    <div class="page" id="page-loan">
+
+      <!-- 대출 요약 -->
+      <div class="card">
+        <div class="card-label">대출 현황</div>
+        <div class="loan-summary-grid">
+          <div class="stat-box"><div class="s-label">총 대출 잔액</div><div class="s-val" id="loan-total-bal" style="color:var(--red)">0원</div></div>
+          <div class="stat-box"><div class="s-label">월 상환 합계</div><div class="s-val" id="loan-total-monthly" style="color:var(--amber)">0원</div></div>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px">
+            <span>순자산 (자산 - 대출)</span>
+            <span id="loan-net-asset" style="font-weight:600">계산 중...</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" id="loan-net-bar" style="width:0%;background:var(--green)"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px" id="loan-net-label"></div>
+        </div>
+      </div>
+
+      <!-- 대출 추가 -->
+      <div class="card">
+        <div class="card-label">대출 추가</div>
+        <div class="form-row"><label>대출명</label><input type="text" id="ln-name" placeholder="카카오뱅크 신용대출" /></div>
+        <div class="form-row"><label>종류</label>
+          <select id="ln-type">
+            <option value="신용대출">신용대출</option>
+            <option value="전세대출">전세대출</option>
+            <option value="주택담보">주택담보</option>
+            <option value="학자금">학자금</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-row"><label>대출 원금 (원)</label><input type="text" inputmode="numeric" id="ln-principal" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>현재 잔액 (원)</label><input type="text" inputmode="numeric" id="ln-balance" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>연이율 (%)</label><input type="number" id="ln-rate" placeholder="4.5" step="0.01" /></div>
+        <div class="form-row"><label>월 상환액 (원)</label><input type="text" inputmode="numeric" id="ln-monthly" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>만기일</label><input type="date" id="ln-due" /></div>
+        <div class="form-row"><label>메모</label><input type="text" id="ln-memo" placeholder="생활비 마련" /></div>
+        <button class="btn btn-primary" onclick="addLoan()">추가</button>
+      </div>
+
+      <!-- 대출 목록 -->
+      <div class="card">
+        <div class="card-label">대출 목록</div>
+        <div id="loan-list"><div class="empty">등록된 대출이 없어요</div></div>
+      </div>
+
+    </div>
+
     <!-- 자산 현황 페이지 -->
     <div class="page" id="page-assets">
 
@@ -632,6 +696,7 @@
     <button class="nav-btn" data-page="savings" onclick="goPage('savings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
     <button class="nav-btn" data-page="invest" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
     <button class="nav-btn" data-page="etf" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" data-page="loan" onclick="goPage('loan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>대출</button>
     <button class="nav-btn" data-page="assets" onclick="goPage('assets',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/></svg>자산</button>
     <button class="nav-btn" data-page="memo" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
     <button class="nav-btn" data-page="settings" onclick="goPage('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>설정</button>
@@ -722,7 +787,7 @@ onAuthStateChanged(auth, async (user) => {
     uid=user.uid;
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets()]);
+    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets(),loadLoans()]);
     renderHome();
   } else {
     uid=null;
@@ -734,7 +799,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 const col = (name) => collection(db,'users',uid,name);
-let invests=[],spends=[],memos=[],savings=[],assets=[];
+let invests=[],spends=[],memos=[],savings=[],assets=[],loans=[];
 
 async function loadInvests() {
   const snap=await getDocs(query(col('invests'),orderBy('createdAt','desc')));
@@ -748,6 +813,11 @@ async function loadMemos() {
   const snap=await getDocs(query(col('memos'),orderBy('createdAt','desc')));
   memos=snap.docs.map(d=>({id:d.id,...d.data()})); renderMemos();
 }
+async function loadLoans() {
+  const snap=await getDocs(query(col('loans'),orderBy('createdAt','desc')));
+  loans=snap.docs.map(d=>({id:d.id,...d.data()})); renderLoans();
+}
+
 async function loadAssets() {
   const snap=await getDocs(query(col('assets'),orderBy('createdAt','desc')));
   assets=snap.docs.map(d=>({id:d.id,...d.data()})); renderAssets();
@@ -781,6 +851,89 @@ window.delSavings = async (id) => {
   await deleteDoc(doc(db,'users',uid,'savings',id));
   savings=savings.filter(x=>x.id!==id); renderSavings();
 };
+// ── 대출 관리 ──
+var loanTypeColor = {
+  '신용대출':'#c0392b','전세대출':'#b45309','주택담보':'#7c3aed','학자금':'#1e5fa8','기타':'#9e9d97'
+};
+
+window.addLoan = async () => {
+  var name      = document.getElementById('ln-name').value.trim();
+  var type      = document.getElementById('ln-type').value;
+  var principal = getVal('ln-principal');
+  var balance   = getVal('ln-balance');
+  var rate      = parseFloat(document.getElementById('ln-rate').value)||0;
+  var monthly   = getVal('ln-monthly');
+  var due       = document.getElementById('ln-due').value;
+  var memo      = document.getElementById('ln-memo').value.trim();
+  if(!name||!balance) return alert('대출명과 잔액을 입력해주세요.');
+  var data = {name,type,principal,balance,rate,monthly,due,memo,createdAt:Date.now()};
+  var ref  = await addDoc(col('loans'),data);
+  loans.unshift({id:ref.id,...data});
+  playBeep();
+  ['ln-name','ln-principal','ln-balance','ln-rate','ln-monthly','ln-due','ln-memo'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  renderLoans(); renderHome();
+};
+
+window.delLoan = async (id) => {
+  if(!confirm('삭제할까요?')) return;
+  await deleteDoc(doc(db,'users',uid,'loans',id));
+  loans=loans.filter(x=>x.id!==id); renderLoans(); renderHome();
+};
+
+function renderLoans() {
+  var el = document.getElementById('loan-list');
+  var totalBal     = loans.reduce((s,l)=>s+l.balance,0);
+  var totalMonthly = loans.reduce((s,l)=>s+l.monthly,0);
+  var totalAssets  = assets.reduce((s,a)=>s+a.amt,0);
+  var netAsset     = totalAssets - totalBal;
+
+  document.getElementById('loan-total-bal').textContent     = fmt(totalBal);
+  document.getElementById('loan-total-monthly').textContent = fmt(totalMonthly);
+
+  var netEl    = document.getElementById('loan-net-asset');
+  var netLabel = document.getElementById('loan-net-label');
+  netEl.textContent   = fmt(Math.abs(netAsset));
+  netEl.style.color   = netAsset>=0 ? 'var(--green)' : 'var(--red)';
+  netLabel.textContent = netAsset>=0 ? '자산이 대출보다 많아요 👍' : '대출이 자산보다 많아요';
+
+  var dti = totalAssets>0 ? Math.min(100,Math.round(totalBal/totalAssets*100)) : 0;
+  document.getElementById('loan-net-bar').style.width = (100-dti)+'%';
+
+  if(!loans.length){el.innerHTML='<div class="empty">등록된 대출이 없어요</div>';return;}
+
+  var today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = loans.map(l=>{
+    var paidPct = l.principal>0 ? Math.min(100,Math.round((l.principal-l.balance)/l.principal*100)) : 0;
+    var monthInterest = Math.round(l.balance*(l.rate/100)/12);
+    var ddayStr='';
+    if(l.due){
+      var due=new Date(l.due); due.setHours(0,0,0,0);
+      var diff=Math.round((due-today)/(1000*60*60*24));
+      ddayStr = diff>0?'만기 D-'+diff:(diff===0?'오늘 만기':'만기 D+'+Math.abs(diff));
+    }
+    return `<div class="loan-item">
+      <div class="loan-top">
+        <div>
+          <div class="loan-name">${l.name}</div>
+          <div style="margin-top:4px"><span class="loan-badge" style="background:${loanTypeColor[l.type]||'#9e9d97'}22;color:${loanTypeColor[l.type]||'#9e9d97'}">${l.type}</span>${ddayStr?'<span style="font-size:11px;color:var(--text3);margin-left:6px">'+ddayStr+'</span>':''}</div>
+        </div>
+        <button class="asset-del" onclick="delLoan('${l.id}')">×</button>
+      </div>
+      <div class="loan-row"><span>현재 잔액</span><span style="color:var(--red);font-weight:600">${fmt(l.balance)}</span></div>
+      ${l.rate?`<div class="loan-row"><span>연이율</span><span>${l.rate}%</span></div>`:''}
+      ${l.monthly?`<div class="loan-row"><span>월 상환액</span><span>${fmt(l.monthly)}</span></div>`:''}
+      ${l.rate?`<div class="loan-row"><span>이번 달 이자</span><span style="color:var(--amber)">약 ${fmt(monthInterest)}</span></div>`:''}
+      ${l.memo?`<div class="loan-row"><span>메모</span><span>${l.memo}</span></div>`:''}
+      ${l.principal?`<div class="loan-prog-wrap">
+        <div class="loan-prog-label"><span>상환률</span><span>${paidPct}%</span></div>
+        <div class="loan-prog-track"><div class="loan-prog-fill" style="width:${paidPct}%;background:var(--green)"></div></div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
 // ── 자산 현황 ──
 var assetColors = {
   '현금·예금': '#1e5fa8',
@@ -1045,6 +1198,14 @@ function renderHome() {
   const rEl=document.getElementById('home-recent');
   const recent=invests.slice(0,3);
   rEl.innerHTML=!recent.length?'<div class="empty">아직 기록이 없어요</div>':recent.map(i=>`<div class="list-item"><div><div class="li-main">${i.note}</div><div class="li-sub">${i.month}</div></div><span class="li-amt">${i.amt.toLocaleString()}원</span></div>`).join('');
+  // 순자산 = 자산 - 대출
+  const totalLoan=loans.reduce((s,l)=>s+l.balance,0);
+  const netAssetVal=total-totalLoan;
+  const homeTotal=document.getElementById('home-total');
+  homeTotal.textContent=fmt(netAssetVal);
+  homeTotal.style.color=netAssetVal>=0?'var(--green)':'var(--red)';
+  document.querySelector('[id="home-total"]').closest('.stat-box').querySelector('.s-label').textContent='순자산';
+
   // 결혼 D-day
   const wDate=new Date('2027-09-04'); wDate.setHours(0,0,0,0);
   const today2=new Date(); today2.setHours(0,0,0,0);
@@ -1068,6 +1229,7 @@ var DEFAULT_TABS = [
   {id:'savings', label:'예적금', svg:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>'},
   {id:'invest', label:'투자', svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'etf', label:'ETF', svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'loan', label:'대출', svg:'<path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/>'},
   {id:'assets', label:'자산', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/>'},
   {id:'memo', label:'메모', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'}
 ];
@@ -1239,6 +1401,7 @@ window.goPage = (id,btn) => {
   if(id==='cashflow') renderCashflow();
   if(id==='settings') renderTabSortList();
   if(id==='assets') renderAssets();
+  if(id==='loan') renderLoans();
 };
 
 // ── 결혼자금 트래커 ──
