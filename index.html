@@ -1031,17 +1031,17 @@ function renderLoans() {
         <div class="asset-edit-row"><label>만기일</label><input id="le-due-${l.id}" value="${l.due||''}" type="date" /></div>
         <div class="asset-edit-row"><label>메모</label><input id="le-memo-${l.id}" value="${l.memo||''}" placeholder="메모" /></div>
         <div class="asset-edit-btns">
-          <button class="btn-edit-save" onclick="saveLoanEdit('${l.id}')">저장</button>
-          <button class="btn-edit-cancel" onclick="toggleLoanEdit('${l.id}')">취소</button>
+          <button class="btn-edit-save" data-save-loan="${l.id}">저장</button>
+          <button class="btn-edit-cancel" data-cancel-loan="${l.id}">취소</button>
         </div>
       </div>` : '';
-    return `<div class="loan-item" style="cursor:pointer" onclick="if(event.target.closest('button')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleLoanEdit('${l.id}')">
+    return `<div class="loan-item" style="cursor:pointer" onclick="if(event.target.closest('[data-save-loan],[data-cancel-loan],[data-del-loan]')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleLoanEdit('${l.id}')">
       <div class="loan-top">
         <div>
           <div class="loan-name">${l.name}</div>
           <div style="margin-top:4px"><span class="loan-badge" style="background:${loanTypeColor[l.type]||'#9e9d97'}22;color:${loanTypeColor[l.type]||'#9e9d97'}">${l.type}</span>${ddayStr?'<span style="font-size:11px;color:var(--text3);margin-left:6px">'+ddayStr+'</span>':''}</div>
         </div>
-        <button class="asset-del" onclick="event.stopPropagation();delLoan('${l.id}')">×</button>
+        <button class="asset-del" data-del-loan="${l.id}">×</button>
       </div>
       <div class="loan-row"><span>현재 잔액</span><span style="color:var(--red);font-weight:600">${fmt(l.balance)}</span></div>
       ${l.rate?`<div class="loan-row"><span>연이율</span><span>${l.rate}%</span></div>`:''}
@@ -1123,6 +1123,28 @@ window.filterAssets = (cat, el) => {
   renderAssets();
 };
 
+// 이벤트 위임 - asset-list
+document.addEventListener('click', function(e) {
+  // 자산 저장
+  var saveBtn = e.target.closest('[data-save-asset]');
+  if(saveBtn) { e.stopPropagation(); saveAssetEdit(saveBtn.dataset.saveAsset); return; }
+  // 자산 취소
+  var cancelBtn = e.target.closest('[data-cancel-asset]');
+  if(cancelBtn) { e.stopPropagation(); editingAssetId=null; renderAssets(); return; }
+  // 자산 삭제
+  var delBtn = e.target.closest('[data-del-asset]');
+  if(delBtn) { e.stopPropagation(); delAsset(delBtn.dataset.delAsset); return; }
+  // 대출 저장
+  var saveLBtn = e.target.closest('[data-save-loan]');
+  if(saveLBtn) { e.stopPropagation(); saveLoanEdit(saveLBtn.dataset.saveLoan); return; }
+  // 대출 취소
+  var cancelLBtn = e.target.closest('[data-cancel-loan]');
+  if(cancelLBtn) { e.stopPropagation(); editingLoanId=null; renderLoans(); return; }
+  // 대출 삭제
+  var delLBtn = e.target.closest('[data-del-loan]');
+  if(delLBtn) { e.stopPropagation(); delLoan(delLBtn.dataset.delLoan); return; }
+});
+
 function renderAssets() {
   var list = assetFilter ? assets.filter(a=>a.cat===assetFilter) : assets;
   var grand = assets.reduce((s,a)=>s+a.amt, 0);
@@ -1165,12 +1187,12 @@ function renderAssets() {
         <div class="asset-edit-row"><label>금액</label><input id="ae-amt-${a.id}" value="${a.amt.toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
         <div class="asset-edit-row"><label>메모</label><input id="ae-memo-${a.id}" value="${a.memo||''}" placeholder="메모" /></div>
         <div class="asset-edit-btns">
-          <button class="btn-edit-save" onclick="saveAssetEdit('${a.id}')">저장</button>
-          <button class="btn-edit-cancel" onclick="toggleAssetEdit('${a.id}')">취소</button>
+          <button class="btn-edit-save" data-save-asset="${a.id}">저장</button>
+          <button class="btn-edit-cancel" data-cancel-asset="${a.id}">취소</button>
         </div>
       </div>` : '';
     return `
-    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="if(event.target.closest('button')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleAssetEdit('${a.id}')">
+    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="if(event.target.closest('[data-save-asset],[data-cancel-asset],[data-del-asset]')||event.target.closest('input')||event.target.closest('select')||event.target.closest('.asset-edit-form'))return;toggleAssetEdit('${a.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="asset-item-left">
           <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
@@ -1181,7 +1203,7 @@ function renderAssets() {
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="asset-amt" style="color:${isEditing?'var(--green)':'inherit'}">${fmt(a.amt)}</span>
-          <button class="asset-del" onclick="event.stopPropagation();delAsset('${a.id}')">×</button>
+          <button class="asset-del" data-del-asset="${a.id}">×</button>
         </div>
       </div>
       ${editForm}
