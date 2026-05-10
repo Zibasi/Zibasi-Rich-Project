@@ -338,7 +338,7 @@
     <div class="page" id="page-cashflow">
       <div class="card">
         <div class="card-label">월 수입 설정</div>
-        <div class="form-row"><label>월 수입 (원)</label><input type="text" inputmode="numeric" id="cf-income" placeholder="2,200,000" value="2200000" oninput="formatComma(this);renderCashflow()" /></div>
+        <div class="form-row"><label>월 수입 (원)</label><input type="text" inputmode="numeric" id="cf-income" placeholder="2,200,000" value="2,200,000" oninput="formatComma(this);renderCashflow()" /></div>
         <div style="font-size:12px;color:var(--text3)">지출은 가계부에서 자동으로 가져와요</div>
       </div>
       <div class="card">
@@ -481,12 +481,74 @@
 
     <!-- 설정 페이지 -->
     <div class="page" id="page-settings">
+
+      <!-- 기본 재무 정보 -->
+      <div class="card">
+        <div class="card-label">기본 재무 설정</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">앱 전체에 기본값으로 적용돼요</div>
+        <div class="form-row"><label>월 수입 (원)</label><input type="text" inputmode="numeric" id="set-income" placeholder="2,200,000" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>월 고정지출 (원)</label><input type="text" inputmode="numeric" id="set-fixed" placeholder="1,200,000" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>월 용돈 (원)</label><input type="text" inputmode="numeric" id="set-pocket" placeholder="300,000" oninput="formatComma(this)" /></div>
+        <button class="btn btn-primary" onclick="saveFinanceSettings()">저장</button>
+        <div id="set-finance-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✓ 저장됐어요</div>
+      </div>
+
+      <!-- 결혼 예정일 -->
+      <div class="card">
+        <div class="card-label">결혼 예정일 설정</div>
+        <div class="form-row"><label>결혼 예정일</label><input type="date" id="set-wedding-date" /></div>
+        <button class="btn btn-primary" onclick="saveWeddingDate()">저장</button>
+        <div id="set-wedding-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✓ 저장됐어요</div>
+      </div>
+
+      <!-- 다크모드 -->
+      <div class="card">
+        <div class="card-label">화면 설정</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">
+          <span style="font-size:14px">다크모드</span>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+            <input type="checkbox" id="set-darkmode" style="opacity:0;width:0;height:0" onchange="toggleDarkMode(this.checked)">
+            <span id="darkmode-slider" style="position:absolute;inset:0;background:var(--border);border-radius:24px;transition:0.3s">
+              <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.3s;display:block" id="darkmode-knob"></span>
+            </span>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;border-top:1px solid var(--border);margin-top:12px">
+          <span style="font-size:14px">알림음 (저장 시)</span>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+            <input type="checkbox" id="set-sound" style="opacity:0;width:0;height:0" onchange="saveSoundPref(this.checked)">
+            <span id="sound-slider" style="position:absolute;inset:0;background:var(--border);border-radius:24px;transition:0.3s">
+              <span style="position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.3s;display:block" id="sound-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 탭 순서 변경 -->
       <div class="card">
         <div class="card-label">탭 순서 변경</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:14px">드래그해서 순서를 바꿔보세요</div>
         <div id="tab-sort-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="saveTabOrder()">저장</button>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="saveTabOrder()">순서 저장</button>
       </div>
+
+      <!-- 데이터 관리 -->
+      <div class="card">
+        <div class="card-label">데이터 관리</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Firebase에 저장된 데이터는 삭제되지 않아요. 앱 설정만 초기화돼요.</div>
+        <button class="btn" style="background:#fef2f2;color:var(--red);border:1px solid #fecaca;width:100%;padding:12px;border-radius:var(--radius-sm);font-size:14px;cursor:pointer;font-family:inherit" onclick="resetAppSettings()">앱 설정 초기화</button>
+      </div>
+
+      <!-- 앱 정보 -->
+      <div class="card">
+        <div class="card-label">앱 정보</div>
+        <div style="font-size:13px;color:var(--text2);line-height:2">
+          <div style="display:flex;justify-content:space-between"><span>앱 이름</span><span>우리 재테크</span></div>
+          <div style="display:flex;justify-content:space-between"><span>버전</span><span>v2.0</span></div>
+          <div style="display:flex;justify-content:space-between"><span>데이터 저장</span><span>Firebase Firestore</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -630,6 +692,7 @@ window.addSavings = async () => {
   const data={name,type,amt,rate,due,memo,createdAt:Date.now()};
   const ref=await addDoc(col('savings'),data);
   savings.unshift({id:ref.id,...data});
+  playBeep();
   document.getElementById('sv-name').value='';
   document.getElementById('sv-amt').value='';
   document.getElementById('sv-rate').value='';
@@ -715,6 +778,7 @@ window.addSpend = async () => {
   const data={date:d,cat:c,amt:a,memo:m,createdAt:Date.now()};
   const ref=await addDoc(col('spends'),data);
   spends.unshift({id:ref.id,...data});
+  playBeep();
   document.getElementById('sp-amt').value='';
   document.getElementById('sp-memo').value='';
   renderSpends(); renderHome();
@@ -891,9 +955,114 @@ function renderTabSortList() {
   });
 }
 
+// ── 설정 저장/로드 함수들 ──
+
+window.saveFinanceSettings = function() {
+  var income = getVal('set-income');
+  var fixed = getVal('set-fixed');
+  var pocket = getVal('set-pocket');
+  localStorage.setItem('financeSettings', JSON.stringify({income, fixed, pocket}));
+  // 수지 페이지 수입 필드에도 반영
+  var cfEl = document.getElementById('cf-income');
+  if(cfEl && income) { cfEl.value = income.toLocaleString(); renderCashflow(); }
+  var msg = document.getElementById('set-finance-msg');
+  msg.style.display = 'block';
+  setTimeout(function(){ msg.style.display='none'; }, 2000);
+};
+
+window.saveWeddingDate = function() {
+  var date = document.getElementById('set-wedding-date').value;
+  if(!date) return;
+  localStorage.setItem('weddingDate', date);
+  // 결혼 트래커에도 반영
+  var wdEl = document.getElementById('wd-date');
+  if(wdEl) wdEl.value = date;
+  var msg = document.getElementById('set-wedding-msg');
+  msg.style.display = 'block';
+  setTimeout(function(){ msg.style.display='none'; }, 2000);
+};
+
+window.toggleDarkMode = function(on) {
+  localStorage.setItem('darkMode', on ? '1' : '0');
+  applyDarkMode(on);
+  var knob = document.getElementById('darkmode-knob');
+  var slider = document.getElementById('darkmode-slider');
+  if(on) { knob.style.transform='translateX(20px)'; slider.style.background='var(--green)'; }
+  else   { knob.style.transform='translateX(0)'; slider.style.background='var(--border)'; }
+};
+
+function applyDarkMode(on) {
+  document.documentElement.style.setProperty('--bg', on ? '#1a1a1a' : '#f5f4ef');
+  document.documentElement.style.setProperty('--surface', on ? '#262626' : '#ffffff');
+  document.documentElement.style.setProperty('--surface2', on ? '#323232' : '#f0efe9');
+  document.documentElement.style.setProperty('--text', on ? '#f0f0f0' : '#1a1916');
+  document.documentElement.style.setProperty('--text2', on ? '#a0a0a0' : '#6b6960');
+  document.documentElement.style.setProperty('--text3', on ? '#666' : '#9e9d97');
+  document.documentElement.style.setProperty('--border', on ? '#3a3a3a' : '#e5e4de');
+}
+
+window.saveSoundPref = function(on) {
+  localStorage.setItem('soundPref', on ? '1' : '0');
+  var knob = document.getElementById('sound-knob');
+  var slider = document.getElementById('sound-slider');
+  if(on) { knob.style.transform='translateX(20px)'; slider.style.background='var(--green)'; }
+  else   { knob.style.transform='translateX(0)'; slider.style.background='var(--border)'; }
+};
+
+function playBeep() {
+  if(localStorage.getItem('soundPref') !== '1') return;
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.setValueAtTime(0.1, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    o.start(); o.stop(ctx.currentTime + 0.3);
+  } catch(e){}
+}
+
+window.resetAppSettings = function() {
+  if(!confirm('앱 설정을 모두 초기화할까요? (Firebase 데이터는 유지돼요)')) return;
+  ['tabOrder','financeSettings','weddingDate','darkMode','soundPref'].forEach(function(k){ localStorage.removeItem(k); });
+  location.reload();
+};
+
+function loadSettings() {
+  // 재무 설정
+  var fs = JSON.parse(localStorage.getItem('financeSettings') || 'null');
+  if(fs) {
+    if(fs.income) document.getElementById('set-income').value = fs.income.toLocaleString();
+    if(fs.fixed) document.getElementById('set-fixed').value = fs.fixed.toLocaleString();
+    if(fs.pocket) document.getElementById('set-pocket').value = fs.pocket.toLocaleString();
+    var cfEl = document.getElementById('cf-income');
+    if(cfEl && fs.income) cfEl.value = fs.income.toLocaleString();
+  }
+  // 결혼 예정일
+  var wd = localStorage.getItem('weddingDate') || '2027-09-04';
+  document.getElementById('set-wedding-date').value = wd;
+  document.getElementById('wd-date').value = wd;
+  // 다크모드
+  var dm = localStorage.getItem('darkMode') === '1';
+  if(dm) {
+    applyDarkMode(true);
+    document.getElementById('set-darkmode').checked = true;
+    document.getElementById('darkmode-knob').style.transform = 'translateX(20px)';
+    document.getElementById('darkmode-slider').style.background = 'var(--green)';
+  }
+  // 알림음
+  var snd = localStorage.getItem('soundPref') === '1';
+  if(snd) {
+    document.getElementById('set-sound').checked = true;
+    document.getElementById('sound-knob').style.transform = 'translateX(20px)';
+    document.getElementById('sound-slider').style.background = 'var(--green)';
+  }
+}
+
 window.saveTabOrder = function() {
   localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
   renderNav();
+loadSettings();
   alert('저장되었어요! ✓');
 };
 
@@ -1025,9 +1194,9 @@ document.getElementById('sp-filter-month').value=now.toISOString().slice(0,7);
 renderNav();
 // 결혼일 기본값 (2027-09-04)
 document.getElementById('wd-date').value='2027-09-04';
-document.getElementById('wd-goal').value='15000000';
-document.getElementById('wd-saved').value='300000';
-document.getElementById('wd-monthly').value='700000';
+document.getElementById('wd-goal').value='15,000,000';
+document.getElementById('wd-saved').value='300,000';
+document.getElementById('wd-monthly').value='700,000';
 // 수지 월 초기화
 document.getElementById('cf-month-label').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
 </script>
