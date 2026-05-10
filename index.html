@@ -105,6 +105,88 @@
 
   .empty { text-align: center; padding: 28px 0; color: var(--text3); font-size: 13px; }
   .loading { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+
+  /* 필터 바 */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .filter-bar select, .filter-bar input { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface); color: var(--text); outline: none; flex: 1; min-width: 90px; }
+  .filter-bar select:focus, .filter-bar input:focus { border-color: var(--green); }
+  .filter-clear { padding: 7px 12px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--text2); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap; }
+  .filter-clear:hover { border-color: var(--text2); }
+
+  /* 카테고리 요약 */
+  .cat-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .cat-chip { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; }
+  .cat-chip.selected { border-color: currentColor; }
+
+  /* 예적금 */
+  .savings-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .savings-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .savings-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .savings-name { font-size: 14px; font-weight: 600; }
+  .savings-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .badge-deposit { background: var(--blue-bg); color: var(--blue); }
+  .badge-saving { background: var(--green-bg); color: var(--green); }
+  .badge-free { background: var(--amber-bg); color: var(--amber); }
+  .savings-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .savings-row span:last-child { font-weight: 500; color: var(--text); }
+  .dday { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .dday-urgent { background: #fef2f2; color: var(--red); }
+  .dday-soon { background: var(--amber-bg); color: var(--amber); }
+  .dday-ok { background: var(--green-bg); color: var(--green); }
+
+  /* 지출 차트 */
+  .mini-chart-wrap { margin-top: 4px; }
+  .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .mini-bar-label { font-size: 12px; color: var(--text2); min-width: 52px; }
+  .mini-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .mini-bar-amt { font-size: 12px; color: var(--text2); min-width: 60px; text-align: right; font-family: 'DM Mono', monospace; }
+
+  /* 결혼자금 트래커 */
+  .wedding-hero { text-align: center; padding: 20px 0 16px; }
+  .wedding-dday { font-size: 36px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .wedding-date-label { font-size: 13px; color: var(--text3); margin-top: 4px; }
+  .goal-arc-wrap { position: relative; display: flex; justify-content: center; margin: 12px 0; }
+  .goal-arc-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .goal-arc-pct { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .goal-arc-sub { font-size: 11px; color: var(--text3); }
+  .goal-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .goal-detail-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; }
+  .goal-detail-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .goal-detail-val { font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* 연금 */
+  .pension-limit-bar { margin: 10px 0; }
+  .pension-limit-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .pension-limit-label span:first-child { color: var(--text2); }
+  .pension-limit-label span:last-child { font-weight: 600; }
+  .pension-refund-box { background: var(--green-bg); border-radius: var(--radius-sm); padding: 14px; margin-top: 14px; }
+  .pension-refund-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .pension-refund-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; color: var(--green); border-top: 1px solid rgba(26,122,88,0.2); padding-top: 10px; margin-top: 6px; }
+
+  /* 월별 수지 */
+  .cashflow-month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cashflow-month-nav button { background: none; border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .cashflow-month-nav span { font-size: 15px; font-weight: 600; }
+  .cashflow-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .cashflow-box { border-radius: var(--radius-sm); padding: 12px 10px; text-align: center; }
+  .cashflow-box .cf-label { font-size: 10px; margin-bottom: 4px; }
+  .cashflow-box .cf-val { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .cf-income { background: var(--blue-bg); }
+  .cf-income .cf-label { color: var(--blue); }
+  .cf-income .cf-val { color: var(--blue); }
+  .cf-spend { background: #fef2f2; }
+  .cf-spend .cf-label { color: var(--red); }
+  .cf-spend .cf-val { color: var(--red); }
+  .cf-save { background: var(--green-bg); }
+  .cf-save .cf-label { color: var(--green); }
+  .cf-save .cf-val { color: var(--green); }
+  .cashflow-monthly-bar { margin: 6px 0; }
+  .cm-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cm-bar-month { font-size: 12px; color: var(--text2); min-width: 36px; }
+  .cm-bar-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .cm-bar-seg { height: 100%; float: left; }
+  .cm-bar-surplus { font-size: 12px; font-family: 'DM Mono', monospace; min-width: 56px; text-align: right; }
 </style>
 </head>
 <body>
@@ -143,9 +225,11 @@
 
   <div class="content">
     <div class="page active" id="page-home">
-      <div class="stat-grid">
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr">
         <div class="stat-box"><div class="s-label">총 투자금</div><div class="s-val green" id="home-total">0원</div></div>
         <div class="stat-box"><div class="s-label">이번 달 지출</div><div class="s-val" id="home-spend">0원</div></div>
+        <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
+        <div class="stat-box"><div class="s-label">이달 저축 가능</div><div class="s-val green" id="home-surplus">0원</div></div>
       </div>
       <div class="card">
         <div class="card-label">이달 투자 목표</div>
@@ -166,6 +250,117 @@
       <div class="card">
         <div class="card-label">최근 투자 기록</div>
         <div id="home-recent"><div class="empty">아직 기록이 없어요</div></div>
+      </div>
+    </div>
+
+    <!-- 결혼자금 트래커 페이지 -->
+    <div class="page" id="page-wedding">
+      <div class="card">
+        <div class="card-label">결혼 D-day 설정</div>
+        <div class="form-row"><label>결혼 예정일</label><input type="date" id="wd-date" /></div>
+        <div class="form-row"><label>목표 금액 (원)</label><input type="number" id="wd-goal" placeholder="15000000" /></div>
+        <div class="form-row"><label>현재 모인 금액 (원)</label><input type="number" id="wd-saved" placeholder="300000" /></div>
+        <div class="form-row"><label>월 저축액 (원)</label><input type="number" id="wd-monthly" placeholder="700000" /></div>
+        <button class="btn btn-primary" onclick="calcWedding()">계산하기</button>
+      </div>
+      <div class="card" id="wd-result" style="display:none">
+        <div class="wedding-hero">
+          <div class="wedding-dday" id="wd-dday">D-???</div>
+          <div class="wedding-date-label" id="wd-date-label"></div>
+        </div>
+        <div class="goal-arc-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="64" fill="none" stroke="#f0efe9" stroke-width="14"/>
+            <circle id="wd-arc" cx="80" cy="80" r="64" fill="none" stroke="#1a7a58" stroke-width="14"
+              stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"
+              transform="rotate(-90 80 80)" style="transition:stroke-dashoffset 0.6s ease"/>
+          </svg>
+          <div class="goal-arc-label">
+            <div class="goal-arc-pct" id="wd-pct">0%</div>
+            <div class="goal-arc-sub">달성률</div>
+          </div>
+        </div>
+        <div class="goal-detail-grid">
+          <div class="goal-detail-box"><div class="goal-detail-label">현재 저축</div><div class="goal-detail-val" id="wd-cur">0</div></div>
+          <div class="goal-detail-box"><div class="goal-detail-label">예상 달성액</div><div class="goal-detail-val" style="color:var(--green)" id="wd-expect">0</div></div>
+          <div class="goal-detail-box"><div class="goal-detail-label">부족/초과</div><div class="goal-detail-val" id="wd-diff">0</div></div>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text2);line-height:1.8" id="wd-advice"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 연금 납입 현황 페이지 -->
+    <div class="page" id="page-pension">
+      <div class="card">
+        <div class="card-label">납입 입력</div>
+        <div class="form-row"><label>연금저축펀드 납입액 (원)</label><input type="number" id="ps-fund" placeholder="0" oninput="calcPension()" /></div>
+        <div class="form-row"><label>IRP 납입액 (원)</label><input type="number" id="ps-irp" placeholder="0" oninput="calcPension()" /></div>
+        <div class="form-row"><label>총급여 (연, 원)</label>
+          <select id="ps-income" onchange="calcPension()">
+            <option value="5500">5,500만원 이하 (세액공제 16.5%)</option>
+            <option value="9999">5,500만원 초과 (세액공제 13.2%)</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;line-height:1.7">연금저축 한도 600만원 · IRP 포함 총 900만원 한도</div>
+      </div>
+      <div class="card">
+        <div class="card-label">한도 현황</div>
+        <div class="pension-limit-bar">
+          <div class="pension-limit-label"><span>연금저축펀드</span><span id="ps-fund-label">0 / 600만원</span></div>
+          <div class="prog-track"><div class="prog-fill" id="ps-fund-bar" style="width:0%"></div></div>
+        </div>
+        <div class="pension-limit-bar">
+          <div class="pension-limit-label"><span>IRP</span><span id="ps-irp-label">0 / 300만원</span></div>
+          <div class="prog-track"><div class="prog-fill" id="ps-irp-bar" style="width:0%;background:var(--blue)"></div></div>
+        </div>
+        <div class="pension-limit-bar">
+          <div class="pension-limit-label"><span>합산 한도</span><span id="ps-total-label">0 / 900만원</span></div>
+          <div class="prog-track"><div class="prog-fill" id="ps-total-bar" style="width:0%;background:var(--amber)"></div></div>
+        </div>
+        <div class="pension-refund-box" id="ps-refund-box">
+          <div class="pension-refund-row"><span>연금저축 세액공제</span><span id="ps-fund-refund" style="color:var(--green)">0원</span></div>
+          <div class="pension-refund-row"><span>IRP 세액공제</span><span id="ps-irp-refund" style="color:var(--green)">0원</span></div>
+          <div class="pension-refund-total"><span>예상 환급액</span><span id="ps-total-refund">0원</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:8px">* 연말정산 기준 / 실제 환급액은 다를 수 있어요</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">월 납입 추천</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8" id="ps-advice">
+          납입액을 입력하면 추천 플랜이 나타나요.
+        </div>
+      </div>
+    </div>
+
+    <!-- 월별 수지 페이지 -->
+    <div class="page" id="page-cashflow">
+      <div class="card">
+        <div class="card-label">월 수입 설정</div>
+        <div class="form-row"><label>월 수입 (원)</label><input type="number" id="cf-income" placeholder="2200000" value="2200000" oninput="renderCashflow()" /></div>
+        <div style="font-size:12px;color:var(--text3)">지출은 가계부에서 자동으로 가져와요</div>
+      </div>
+      <div class="card">
+        <div class="card-label">이번 달 수지</div>
+        <div class="cashflow-month-nav">
+          <button onclick="cfMonthShift(-1)">◀</button>
+          <span id="cf-month-label"></span>
+          <button onclick="cfMonthShift(1)">▶</button>
+        </div>
+        <div class="cashflow-grid">
+          <div class="cashflow-box cf-income"><div class="cf-label">수입</div><div class="cf-val" id="cf-val-income">0</div></div>
+          <div class="cashflow-box cf-spend"><div class="cf-label">지출</div><div class="cf-val" id="cf-val-spend">0</div></div>
+          <div class="cashflow-box cf-save"><div class="cf-label">저축 가능</div><div class="cf-val" id="cf-val-save">0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">최근 6개월 추이</div>
+        <div class="cashflow-monthly-bar" id="cf-trend"></div>
+        <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--text2)">
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--blue);border-radius:2px;margin-right:4px"></span>지출</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;margin-right:4px"></span>저축</span>
+        </div>
       </div>
     </div>
 
@@ -218,12 +413,29 @@
         <button class="btn btn-primary" onclick="addSpend()">지출 추가</button>
       </div>
       <div class="card">
-        <div class="card-label">이번 달 지출</div>
+        <div class="card-label">지출 내역</div>
+        <div class="filter-bar">
+          <input type="month" id="sp-filter-month" onchange="renderSpends()" />
+          <select id="sp-filter-cat" onchange="renderSpends()">
+            <option value="">전체 카테고리</option>
+            <option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>공과금</option><option>문화/여가</option><option>기타</option>
+          </select>
+          <select id="sp-filter-sort" onchange="renderSpends()">
+            <option value="date-desc">날짜 최신순</option>
+            <option value="date-asc">날짜 오래된순</option>
+            <option value="amt-desc">금액 높은순</option>
+            <option value="amt-asc">금액 낮은순</option>
+          </select>
+        </div>
         <div id="spend-total-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px;color:var(--text2)">합계</span>
+          <span style="font-size:13px;color:var(--text2)">합계 <span id="spend-filter-label" style="color:var(--green);font-weight:600"></span></span>
           <span style="font-size:18px;font-weight:600;font-family:'DM Mono',monospace" id="spend-total">0원</span>
         </div>
         <div id="spend-list"><div class="loading">불러오는 중...</div></div>
+      </div>
+      <div class="card" id="spend-chart-card" style="display:none">
+        <div class="card-label">카테고리별 지출</div>
+        <div class="mini-chart-wrap" id="spend-chart"></div>
       </div>
     </div>
 
@@ -236,14 +448,47 @@
       </div>
       <div id="memo-list"><div class="loading">불러오는 중...</div></div>
     </div>
+
+    <div class="page" id="page-savings">
+      <div class="card">
+        <div class="card-label">예적금 추가</div>
+        <div class="form-row"><label>상품명</label><input type="text" id="sv-name" placeholder="카카오뱅크 26주적금" /></div>
+        <div class="form-row"><label>종류</label>
+          <select id="sv-type">
+            <option value="deposit">정기예금</option>
+            <option value="saving">정기적금</option>
+            <option value="free">자유적금</option>
+          </select>
+        </div>
+        <div class="form-row"><label>원금 / 월납입액 (원)</label><input type="number" id="sv-amt" placeholder="3000000" /></div>
+        <div class="form-row"><label>연이율 (%)</label><input type="number" id="sv-rate" placeholder="3.5" step="0.01" /></div>
+        <div class="form-row"><label>만기일</label><input type="date" id="sv-due" /></div>
+        <div class="form-row"><label>메모</label><input type="text" id="sv-memo" placeholder="비상금용" /></div>
+        <button class="btn btn-primary" onclick="addSavings()">추가</button>
+      </div>
+      <div class="card">
+        <div class="card-label">예적금 현황</div>
+        <div id="savings-summary" style="display:none;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="stat-box"><div class="s-label">총 예치금</div><div class="s-val green" id="sv-total-amt">0원</div></div>
+            <div class="stat-box"><div class="s-label">예상 이자 합계</div><div class="s-val" id="sv-total-int" style="color:var(--amber)">0원</div></div>
+          </div>
+        </div>
+        <div id="savings-list"><div class="loading">불러오는 중...</div></div>
+      </div>
+    </div>
   </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="goPage('home',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
-    <button class="nav-btn" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자 기록</button>
-    <button class="nav-btn" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
-    <button class="nav-btn" onclick="goPage('spend',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>가계부</button>
-    <button class="nav-btn" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>공부 메모</button>
+  <nav class="bottom-nav" style="flex-wrap:wrap;height:auto">
+    <button class="nav-btn active" onclick="goPage('home',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
+    <button class="nav-btn" onclick="goPage('spend',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>가계부</button>
+    <button class="nav-btn" onclick="goPage('cashflow',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>수지</button>
+    <button class="nav-btn" onclick="goPage('wedding',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>결혼</button>
+    <button class="nav-btn" onclick="goPage('pension',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>연금</button>
+    <button class="nav-btn" onclick="goPage('savings',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
+    <button class="nav-btn" onclick="goPage('invest',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
+    <button class="nav-btn" onclick="goPage('etf',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" onclick="goPage('memo',this)" style="flex-basis:16.6%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
   </nav>
 </div>
 
@@ -314,7 +559,7 @@ onAuthStateChanged(auth, async (user) => {
     uid=user.uid;
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    await Promise.all([loadInvests(),loadSpends(),loadMemos()]);
+    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings()]);
     renderHome();
   } else {
     uid=null;
@@ -326,7 +571,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 const col = (name) => collection(db,'users',uid,name);
-let invests=[],spends=[],memos=[];
+let invests=[],spends=[],memos=[],savings=[];
 
 async function loadInvests() {
   const snap=await getDocs(query(col('invests'),orderBy('createdAt','desc')));
@@ -339,6 +584,75 @@ async function loadSpends() {
 async function loadMemos() {
   const snap=await getDocs(query(col('memos'),orderBy('createdAt','desc')));
   memos=snap.docs.map(d=>({id:d.id,...d.data()})); renderMemos();
+}
+async function loadSavings() {
+  const snap=await getDocs(query(col('savings'),orderBy('createdAt','desc')));
+  savings=snap.docs.map(d=>({id:d.id,...d.data()})); renderSavings();
+}
+
+window.addSavings = async () => {
+  const name=document.getElementById('sv-name').value.trim();
+  const type=document.getElementById('sv-type').value;
+  const amt=parseInt(document.getElementById('sv-amt').value);
+  const rate=parseFloat(document.getElementById('sv-rate').value);
+  const due=document.getElementById('sv-due').value;
+  const memo=document.getElementById('sv-memo').value.trim();
+  if(!name||!amt||!rate||!due) return alert('상품명, 금액, 이율, 만기일을 입력해주세요.');
+  const data={name,type,amt,rate,due,memo,createdAt:Date.now()};
+  const ref=await addDoc(col('savings'),data);
+  savings.unshift({id:ref.id,...data});
+  document.getElementById('sv-name').value='';
+  document.getElementById('sv-amt').value='';
+  document.getElementById('sv-rate').value='';
+  document.getElementById('sv-due').value='';
+  document.getElementById('sv-memo').value='';
+  renderSavings();
+};
+window.delSavings = async (id) => {
+  await deleteDoc(doc(db,'users',uid,'savings',id));
+  savings=savings.filter(x=>x.id!==id); renderSavings();
+};
+function renderSavings() {
+  const el=document.getElementById('savings-list');
+  const sumEl=document.getElementById('savings-summary');
+  const typeLabel={deposit:'정기예금',saving:'정기적금',free:'자유적금'};
+  const typeBadge={deposit:'badge-deposit',saving:'badge-saving',free:'badge-free'};
+  if(!savings.length){sumEl.style.display='none';el.innerHTML='<div class="empty">등록된 예적금이 없어요</div>';return;}
+  const today=new Date(); today.setHours(0,0,0,0);
+  let totalAmt=0, totalInt=0;
+  const html=savings.map(s=>{
+    const due=new Date(s.due); due.setHours(0,0,0,0);
+    const diff=Math.round((due-today)/(1000*60*60*24));
+    let ddayClass='dday-ok', ddayText='D-'+diff;
+    if(diff<0){ddayClass='dday-urgent';ddayText='만기 D+'+Math.abs(diff);}
+    else if(diff===0){ddayClass='dday-urgent';ddayText='오늘 만기!';}
+    else if(diff<=30){ddayClass='dday-soon';}
+    // 단순 이자 계산 (정기예금 기준)
+    const months=Math.max(1,Math.round((due-new Date(s.createdAt))/(1000*60*60*24*30)));
+    const interest=Math.round(s.amt*(s.rate/100)*(months/12));
+    totalAmt+=s.amt; totalInt+=interest;
+    return `<div class="savings-item">
+      <div class="savings-top">
+        <div>
+          <div class="savings-name">${s.name}</div>
+          <div style="margin-top:4px"><span class="savings-badge ${typeBadge[s.type]||'badge-free'}">${typeLabel[s.type]||s.type}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="dday ${ddayClass}">${ddayText}</span>
+          <button class="del-btn" onclick="delSavings('${s.id}')">×</button>
+        </div>
+      </div>
+      <div class="savings-row"><span>원금</span><span>${s.amt.toLocaleString()}원</span></div>
+      <div class="savings-row"><span>연이율</span><span>${s.rate}%</span></div>
+      <div class="savings-row"><span>만기일</span><span>${s.due}</span></div>
+      <div class="savings-row"><span>예상 이자</span><span style="color:var(--amber)">${interest.toLocaleString()}원</span></div>
+      ${s.memo?`<div class="savings-row"><span>메모</span><span>${s.memo}</span></div>`:''}
+    </div>`;
+  }).join('');
+  el.innerHTML=html;
+  sumEl.style.display='block';
+  document.getElementById('sv-total-amt').textContent=fmt(totalAmt);
+  document.getElementById('sv-total-int').textContent='+'+fmt(totalInt);
 }
 
 window.addInvest = async () => {
@@ -381,15 +695,52 @@ window.delSpend = async (id) => {
   spends=spends.filter(x=>x.id!==id); renderSpends(); renderHome();
 };
 function renderSpends() {
-  const tm=thisMonth();
-  const list=spends.filter(s=>s.date.slice(0,7)===tm);
-  const total=list.reduce((s,x)=>s+x.amt,0);
-  const tr=document.getElementById('spend-total-row');
-  const el=document.getElementById('spend-list');
-  if(!list.length){tr.style.display='none';el.innerHTML='<div class="empty">이번 달 기록이 없어요</div>';return;}
+  const filterMonth = document.getElementById('sp-filter-month').value || thisMonth();
+  const filterCat = document.getElementById('sp-filter-cat').value;
+  const sortMode = document.getElementById('sp-filter-sort').value;
+
+  let list = spends.filter(s => s.date.slice(0,7) === filterMonth);
+  if(filterCat) list = list.filter(s => s.cat === filterCat);
+
+  if(sortMode === 'date-desc') list.sort((a,b) => b.date.localeCompare(a.date));
+  else if(sortMode === 'date-asc') list.sort((a,b) => a.date.localeCompare(b.date));
+  else if(sortMode === 'amt-desc') list.sort((a,b) => b.amt - a.amt);
+  else if(sortMode === 'amt-asc') list.sort((a,b) => a.amt - b.amt);
+
+  const total = list.reduce((s,x) => s+x.amt, 0);
+  const tr = document.getElementById('spend-total-row');
+  const el = document.getElementById('spend-list');
+  const labelEl = document.getElementById('spend-filter-label');
+
+  if(filterCat) labelEl.textContent = '· '+filterCat;
+  else labelEl.textContent = '';
+
+  if(!list.length) {
+    tr.style.display='none';
+    el.innerHTML='<div class="empty">해당 기간 기록이 없어요</div>';
+    document.getElementById('spend-chart-card').style.display='none';
+    return;
+  }
   tr.style.display='flex';
-  document.getElementById('spend-total').textContent=total.toLocaleString()+'원';
-  el.innerHTML=list.map(s=>`<div class="list-item"><div><div class="li-main"><span class="cat-dot" style="background:${catColors[s.cat]||'#9e9d97'}"></span>${s.cat}${s.memo?' · '+s.memo:''}</div><div class="li-sub">${s.date}</div></div><div style="display:flex;align-items:center;gap:10px"><span class="li-amt">${s.amt.toLocaleString()}원</span><button class="del-btn" onclick="delSpend('${s.id}')">×</button></div></div>`).join('');
+  document.getElementById('spend-total').textContent = total.toLocaleString()+'원';
+  el.innerHTML = list.map(s=>`<div class="list-item"><div><div class="li-main"><span class="cat-dot" style="background:${catColors[s.cat]||'#9e9d97'}"></span>${s.cat}${s.memo?' · '+s.memo:''}</div><div class="li-sub">${s.date}</div></div><div style="display:flex;align-items:center;gap:10px"><span class="li-amt">${s.amt.toLocaleString()}원</span><button class="del-btn" onclick="delSpend('${s.id}')">×</button></div></div>`).join('');
+
+  // 카테고리 차트 (필터 없을 때만)
+  if(!filterCat) {
+    const catTotals = {};
+    list.forEach(s => { catTotals[s.cat] = (catTotals[s.cat]||0) + s.amt; });
+    const sorted = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+    const max = sorted[0]?.[1] || 1;
+    document.getElementById('spend-chart-card').style.display='block';
+    document.getElementById('spend-chart').innerHTML = sorted.map(([cat,amt])=>`
+      <div class="mini-bar-row">
+        <span class="mini-bar-label">${cat}</span>
+        <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${Math.round(amt/max*100)}%;background:${catColors[cat]||'#9e9d97'}"></div></div>
+        <span class="mini-bar-amt">${Math.round(amt/total*100)}%</span>
+      </div>`).join('');
+  } else {
+    document.getElementById('spend-chart-card').style.display='none';
+  }
 }
 
 window.addMemo = async () => {
@@ -437,6 +788,17 @@ function renderHome() {
   const rEl=document.getElementById('home-recent');
   const recent=invests.slice(0,3);
   rEl.innerHTML=!recent.length?'<div class="empty">아직 기록이 없어요</div>':recent.map(i=>`<div class="list-item"><div><div class="li-main">${i.note}</div><div class="li-sub">${i.month}</div></div><span class="li-amt">${i.amt.toLocaleString()}원</span></div>`).join('');
+  // 결혼 D-day
+  const wDate=new Date('2027-09-04'); wDate.setHours(0,0,0,0);
+  const today2=new Date(); today2.setHours(0,0,0,0);
+  const wDiff=Math.round((wDate-today2)/(1000*60*60*24));
+  const wEl=document.getElementById('home-wedding-dday');
+  wEl.textContent=wDiff>0?'D-'+wDiff:(wDiff===0?'D-DAY':'D+'+Math.abs(wDiff));
+  wEl.style.color=wDiff<=30?'var(--red)':wDiff<=90?'var(--amber)':'var(--blue)';
+  // 이달 저축 가능 (수입 220만 - 지출)
+  const income=parseInt(document.getElementById('cf-income')?.value)||2200000;
+  const surplus=Math.max(0,income-mSpend);
+  document.getElementById('home-surplus').textContent=fmt(surplus);
 }
 
 window.goPage = (id,btn) => {
@@ -444,12 +806,132 @@ window.goPage = (id,btn) => {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
+  if(id==='cashflow') renderCashflow();
 };
+
+// ── 결혼자금 트래커 ──
+window.calcWedding = () => {
+  const dateVal = document.getElementById('wd-date').value;
+  const goal = parseInt(document.getElementById('wd-goal').value)||0;
+  const saved = parseInt(document.getElementById('wd-saved').value)||0;
+  const monthly = parseInt(document.getElementById('wd-monthly').value)||0;
+  if(!dateVal||!goal) return alert('결혼 예정일과 목표 금액을 입력해주세요.');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const wDate = new Date(dateVal); wDate.setHours(0,0,0,0);
+  const diffDays = Math.round((wDate-today)/(1000*60*60*24));
+  const months = Math.max(0, Math.round(diffDays/30));
+  const expected = saved + monthly*months;
+  const pct = Math.min(100, Math.round(expected/goal*100));
+  const diff = expected - goal;
+
+  document.getElementById('wd-result').style.display='block';
+  document.getElementById('wd-dday').textContent = diffDays>0?'D-'+diffDays:(diffDays===0?'D-DAY':'D+'+Math.abs(diffDays));
+  document.getElementById('wd-date-label').textContent = wDate.getFullYear()+'년 '+(wDate.getMonth()+1)+'월 '+wDate.getDate()+'일 결혼 예정';
+  document.getElementById('wd-pct').textContent = pct+'%';
+  document.getElementById('wd-cur').textContent = fmt(saved);
+  document.getElementById('wd-expect').textContent = fmt(expected);
+  const diffEl = document.getElementById('wd-diff');
+  diffEl.textContent = (diff>=0?'+':'')+fmt(Math.abs(diff));
+  diffEl.style.color = diff>=0?'var(--green)':'var(--red)';
+  // 원형 진행바 (둘레 402)
+  const offset = 402 - Math.round(402*pct/100);
+  document.getElementById('wd-arc').style.strokeDashoffset = offset;
+  // 조언
+  let advice = '';
+  if(diff>=0) advice = `월 ${monthly.toLocaleString()}원씩 저축하면 결혼 전까지 약 ${fmt(expected)}을 모을 수 있어요. 목표보다 ${fmt(diff)} 여유가 생겨요! 🎉`;
+  else {
+    const need = Math.ceil(Math.abs(diff)/Math.max(months,1));
+    advice = `현재 페이스로는 목표보다 ${fmt(Math.abs(diff))} 부족해요. 월 ${need.toLocaleString()}원을 더 저축하거나, 목표 금액을 ${fmt(expected)}으로 조정해보세요.`;
+  }
+  document.getElementById('wd-advice').textContent = advice;
+};
+
+// ── 연금 납입 현황 ──
+window.calcPension = () => {
+  const fund = parseInt(document.getElementById('ps-fund').value)||0;
+  const irp = parseInt(document.getElementById('ps-irp').value)||0;
+  const rate = document.getElementById('ps-income').value==='5500'?0.165:0.132;
+  const fundLimit = 6000000, irpExtra = 3000000, totalLimit = 9000000;
+  const total = fund+irp;
+  const fundEff = Math.min(fund, fundLimit);
+  const irpEff = Math.min(irp, irpExtra);
+  const totalEff = Math.min(total, totalLimit);
+  const fundRefund = Math.round(fundEff*rate);
+  const irpRefund = Math.round(irpEff*rate);
+  const totalRefund = Math.round(totalEff*rate);
+
+  document.getElementById('ps-fund-label').textContent = fmt(fund)+' / 600만원';
+  document.getElementById('ps-irp-label').textContent = fmt(irp)+' / 300만원';
+  document.getElementById('ps-total-label').textContent = fmt(total)+' / 900만원';
+  document.getElementById('ps-fund-bar').style.width = Math.min(100,Math.round(fund/fundLimit*100))+'%';
+  document.getElementById('ps-irp-bar').style.width = Math.min(100,Math.round(irp/irpExtra*100))+'%';
+  document.getElementById('ps-total-bar').style.width = Math.min(100,Math.round(total/totalLimit*100))+'%';
+  document.getElementById('ps-fund-refund').textContent = '+'+totalRefund.toLocaleString()+'원 (연금저축)';
+  document.getElementById('ps-irp-refund').textContent = '+'+irpRefund.toLocaleString()+'원 (IRP)';
+  document.getElementById('ps-total-refund').textContent = '+'+(fundRefund+irpRefund).toLocaleString()+'원';
+
+  const remain = totalLimit - total;
+  let advice = '';
+  if(total===0) advice = '연금저축펀드와 IRP 납입액을 입력하면 세액공제 예상액을 바로 확인할 수 있어요.\n\n월 25만원씩 연금저축에 납입하면 연간 약 49.5만원을 돌려받을 수 있어요 (16.5% 기준).';
+  else if(remain>0) advice = `한도까지 ${fmt(remain)} 더 넣을 수 있어요. 추가 납입 시 최대 ${Math.round(remain*rate).toLocaleString()}원을 더 돌려받아요.\n\n월 납입 추천: 연금저축 월 ${Math.round(Math.min(fundLimit-fund,remain)/12/10000)*10000 > 0 ? Math.round(Math.min(fundLimit-fund,remain)/12/10000)*10000+'원' : '한도 초과'} + IRP 월 ${Math.round(Math.min(irpExtra-irp,remain)/12/10000)*10000 > 0 ? Math.round(Math.min(irpExtra-irp,remain)/12/10000)*10000+'원' : '한도 초과'}`;
+  else advice = `연간 한도 900만원을 모두 채웠어요! 연말정산에서 최대 ${Math.round(totalLimit*rate).toLocaleString()}원을 돌려받을 수 있어요. 🎉`;
+  document.getElementById('ps-advice').textContent = advice;
+};
+
+// ── 월별 수지 ──
+let cfCurrentMonth = new Date().toISOString().slice(0,7);
+window.cfMonthShift = (dir) => {
+  const [y,m] = cfCurrentMonth.split('-').map(Number);
+  const d = new Date(y, m-1+dir, 1);
+  cfCurrentMonth = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderCashflow();
+};
+function renderCashflow() {
+  const income = parseInt(document.getElementById('cf-income').value)||0;
+  const monthSpend = spends.filter(s=>s.date.slice(0,7)===cfCurrentMonth).reduce((s,x)=>s+x.amt,0);
+  const surplus = income - monthSpend;
+  const [y,m] = cfCurrentMonth.split('-').map(Number);
+  document.getElementById('cf-month-label').textContent = y+'년 '+m+'월';
+  document.getElementById('cf-val-income').textContent = fmt(income);
+  document.getElementById('cf-val-spend').textContent = fmt(monthSpend);
+  const saveEl = document.getElementById('cf-val-save');
+  saveEl.textContent = fmt(Math.max(0,surplus));
+  saveEl.style.color = surplus>=0?'var(--green)':'var(--red)';
+
+  // 최근 6개월 추이
+  const trendEl = document.getElementById('cf-trend');
+  const months6 = [];
+  for(let i=5;i>=0;i--) {
+    const d = new Date(y, m-1-i, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label = (d.getMonth()+1)+'월';
+    const sp = spends.filter(s=>s.date.slice(0,7)===key).reduce((s,x)=>s+x.amt,0);
+    months6.push({label,sp,save:Math.max(0,income-sp),total:income});
+  }
+  const maxAmt = Math.max(...months6.map(x=>x.total),1);
+  trendEl.innerHTML = months6.map(x=>`
+    <div class="cm-bar-row">
+      <span class="cm-bar-month">${x.label}</span>
+      <div class="cm-bar-track">
+        <div class="cm-bar-seg" style="width:${Math.round(x.sp/maxAmt*100)}%;background:var(--blue);opacity:0.7"></div>
+        <div class="cm-bar-seg" style="width:${Math.round(x.save/maxAmt*100)}%;background:var(--green);opacity:0.7"></div>
+      </div>
+      <span class="cm-bar-surplus" style="color:${income-x.sp>=0?'var(--green)':'var(--red)'}">${fmt(income-x.sp)}</span>
+    </div>`).join('');
+}
 
 const now=new Date();
 document.getElementById('header-date').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 ('+['일','월','화','수','목','금','토'][now.getDay()]+'요일)';
 document.getElementById('inv-month').value=now.toISOString().slice(0,7);
 document.getElementById('sp-date').value=todayStr();
+document.getElementById('sp-filter-month').value=now.toISOString().slice(0,7);
+// 결혼일 기본값 (2027-09-04)
+document.getElementById('wd-date').value='2027-09-04';
+document.getElementById('wd-goal').value='15000000';
+document.getElementById('wd-saved').value='300000';
+document.getElementById('wd-monthly').value='700000';
+// 수지 월 초기화
+document.getElementById('cf-month-label').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
 </script>
 </body>
 </html>
