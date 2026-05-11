@@ -780,7 +780,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyC61cmUgI93VZ6pF2ICV3vpxPb8ne0n5hQ",
@@ -1006,55 +1006,100 @@ function renderLoans() {
   if(!loans.length){el.innerHTML='<div class="empty">등록된 대출이 없어요</div>';return;}
 
   var today = new Date(); today.setHours(0,0,0,0);
-  el.innerHTML = loans.map(l=>{
+  el.innerHTML = '';
+  loans.forEach(function(l) {
     var paidPct = l.principal>0 ? Math.min(100,Math.round((l.principal-l.balance)/l.principal*100)) : 0;
     var monthInterest = Math.round(l.balance*(l.rate/100)/12);
     var ddayStr='';
     if(l.due){
-      var due=new Date(l.due); due.setHours(0,0,0,0);
-      var diff=Math.round((due-today)/(1000*60*60*24));
+      var due2=new Date(l.due); due2.setHours(0,0,0,0);
+      var diff=Math.round((due2-today)/(1000*60*60*24));
       ddayStr = diff>0?'만기 D-'+diff:(diff===0?'오늘 만기':'만기 D+'+Math.abs(diff));
     }
     var isEditing = editingLoanId === l.id;
-    var editForm = isEditing ? `
-      <div class="asset-edit-form">
-        <div class="asset-edit-row"><label>대출명</label><input id="le-name-${l.id}" value="${l.name}" /></div>
-        <div class="asset-edit-row"><label>종류</label>
-          <select id="le-type-${l.id}">
-            ${['신용대출','전세대출','주택담보','학자금','기타'].map(t=>`<option value="${t}" ${l.type===t?'selected':''}>${t}</option>`).join('')}
-          </select>
-        </div>
-        <div class="asset-edit-row"><label>원금</label><input id="le-principal-${l.id}" value="${(l.principal||0).toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
-        <div class="asset-edit-row"><label>잔액</label><input id="le-balance-${l.id}" value="${l.balance.toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
-        <div class="asset-edit-row"><label>연이율</label><input id="le-rate-${l.id}" value="${l.rate||''}" type="number" step="0.01" placeholder="4.5" /></div>
-        <div class="asset-edit-row"><label>월상환</label><input id="le-monthly-${l.id}" value="${(l.monthly||0).toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
-        <div class="asset-edit-row"><label>만기일</label><input id="le-due-${l.id}" value="${l.due||''}" type="date" /></div>
-        <div class="asset-edit-row"><label>메모</label><input id="le-memo-${l.id}" value="${l.memo||''}" placeholder="메모" /></div>
-        <div class="asset-edit-btns">
-          <button class="btn-edit-save" onclick="event.stopPropagation();window.saveLoanEdit('${l.id}')">저장</button>
-          <button class="btn-edit-cancel" onclick="event.stopPropagation();window.editingLoanId=null;window.renderLoansPublic()">취소</button>
-        </div>
-      </div>` : '';
-    return `<div class="loan-item" style="cursor:pointer" onclick="if(event.target.tagName==='BUTTON'||event.target.tagName==='INPUT'||event.target.tagName==='SELECT')return;window.toggleLoanEdit('${l.id}')">
-      <div class="loan-top">
-        <div>
-          <div class="loan-name">${l.name}</div>
-          <div style="margin-top:4px"><span class="loan-badge" style="background:${loanTypeColor[l.type]||'#9e9d97'}22;color:${loanTypeColor[l.type]||'#9e9d97'}">${l.type}</span>${ddayStr?'<span style="font-size:11px;color:var(--text3);margin-left:6px">'+ddayStr+'</span>':''}</div>
-        </div>
-        <button class="asset-del" onclick="event.stopPropagation();window.delLoan('${l.id}')">×</button>
-      </div>
-      <div class="loan-row"><span>현재 잔액</span><span style="color:var(--red);font-weight:600">${fmt(l.balance)}</span></div>
-      ${l.rate?`<div class="loan-row"><span>연이율</span><span>${l.rate}%</span></div>`:''}
-      ${l.monthly?`<div class="loan-row"><span>월 상환액</span><span>${fmt(l.monthly)}</span></div>`:''}
-      ${l.rate?`<div class="loan-row"><span>이번 달 이자</span><span style="color:var(--amber)">약 ${fmt(monthInterest)}</span></div>`:''}
-      ${l.memo?`<div class="loan-row"><span>메모</span><span>${l.memo}</span></div>`:''}
-      ${l.principal?`<div class="loan-prog-wrap">
-        <div class="loan-prog-label"><span>상환률</span><span>${paidPct}%</span></div>
-        <div class="loan-prog-track"><div class="loan-prog-fill" style="width:${paidPct}%;background:var(--green)"></div></div>
-      </div>`:''}
-      ${editForm}
-    </div>`;
-  }).join('');
+    var item = document.createElement('div');
+    item.className = 'loan-item';
+    item.style.cursor = 'pointer';
+
+    // 상단
+    var topDiv = document.createElement('div'); topDiv.className = 'loan-top';
+    var infoDiv = document.createElement('div');
+    infoDiv.innerHTML = '<div class="loan-name">' + l.name + '</div><div style="margin-top:4px"><span class="loan-badge" style="background:' + (loanTypeColor[l.type]||'#9e9d97') + '22;color:' + (loanTypeColor[l.type]||'#9e9d97') + '">' + l.type + '</span>' + (ddayStr?'<span style="font-size:11px;color:var(--text3);margin-left:6px">'+ddayStr+'</span>':'') + '</div>';
+    var delBtn = document.createElement('button'); delBtn.className='asset-del'; delBtn.textContent='×';
+    delBtn.addEventListener('click', function(e){e.stopPropagation(); window.delLoan(l.id);});
+    topDiv.appendChild(infoDiv); topDiv.appendChild(delBtn);
+    item.appendChild(topDiv);
+
+    // 정보 행들
+    var rows = [
+      ['현재 잔액', '<span style="color:var(--red);font-weight:600">'+fmt(l.balance)+'</span>'],
+      l.rate ? ['연이율', l.rate+'%'] : null,
+      l.monthly ? ['월 상환액', fmt(l.monthly)] : null,
+      l.rate ? ['이번 달 이자', '<span style="color:var(--amber)">약 '+fmt(monthInterest)+'</span>'] : null,
+      l.memo ? ['메모', l.memo] : null
+    ];
+    rows.filter(Boolean).forEach(function(r){
+      var d = document.createElement('div'); d.className='loan-row';
+      d.innerHTML = '<span>'+r[0]+'</span><span>'+r[1]+'</span>';
+      item.appendChild(d);
+    });
+
+    // 상환률
+    if(l.principal) {
+      var pw = document.createElement('div'); pw.className='loan-prog-wrap';
+      pw.innerHTML = '<div class="loan-prog-label"><span>상환률</span><span>'+paidPct+'%</span></div><div class="loan-prog-track"><div class="loan-prog-fill" style="width:'+paidPct+'%;background:var(--green)"></div></div>';
+      item.appendChild(pw);
+    }
+
+    // 편집 폼
+    if(isEditing) {
+      var form = document.createElement('div'); form.className='asset-edit-form';
+      var fields = [
+        {label:'대출명', id:'le-name-'+l.id, val:l.name, type:'text'},
+        {label:'원금', id:'le-principal-'+l.id, val:(l.principal||0).toLocaleString(), type:'tel', comma:true},
+        {label:'잔액', id:'le-balance-'+l.id, val:l.balance.toLocaleString(), type:'tel', comma:true},
+        {label:'연이율', id:'le-rate-'+l.id, val:l.rate||'', type:'number'},
+        {label:'월상환', id:'le-monthly-'+l.id, val:(l.monthly||0).toLocaleString(), type:'tel', comma:true},
+        {label:'만기일', id:'le-due-'+l.id, val:l.due||'', type:'date'},
+        {label:'메모', id:'le-memo-'+l.id, val:l.memo||'', type:'text'}
+      ];
+      fields.forEach(function(f){
+        var row = document.createElement('div'); row.className='asset-edit-row';
+        var lbl = document.createElement('label'); lbl.textContent=f.label;
+        var inp = document.createElement('input');
+        inp.id=f.id; inp.value=f.val;
+        inp.setAttribute('inputmode', f.type==='tel'?'numeric':'text');
+        if(f.type==='number'){inp.type='number';inp.step='0.01';}
+        if(f.type==='date') inp.type='date';
+        if(f.comma) inp.addEventListener('input',function(){window.formatComma(this);});
+        row.appendChild(lbl); row.appendChild(inp); form.appendChild(row);
+      });
+      // 종류 select
+      var typeRow = document.createElement('div'); typeRow.className='asset-edit-row';
+      var typeSel = document.createElement('select'); typeSel.id='le-type-'+l.id;
+      ['신용대출','전세대출','주택담보','학자금','기타'].forEach(function(t){
+        var opt=document.createElement('option'); opt.value=t; opt.textContent=t;
+        if(l.type===t) opt.selected=true; typeSel.appendChild(opt);
+      });
+      typeRow.innerHTML='<label>종류</label>'; typeRow.appendChild(typeSel);
+      form.insertBefore(typeRow, form.children[1]);
+
+      var btnRow=document.createElement('div'); btnRow.className='asset-edit-btns';
+      var sv=document.createElement('button'); sv.className='btn-edit-save'; sv.textContent='저장';
+      sv.addEventListener('click',function(e){e.stopPropagation(); window.saveLoanEdit(l.id);});
+      var cn=document.createElement('button'); cn.className='btn-edit-cancel'; cn.textContent='취소';
+      cn.addEventListener('click',function(e){e.stopPropagation(); editingLoanId=null; renderLoans();});
+      btnRow.appendChild(sv); btnRow.appendChild(cn);
+      form.appendChild(btnRow);
+      item.appendChild(form);
+    }
+
+    item.addEventListener('click',function(e){
+      if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+      window.toggleLoanEdit(l.id);
+    });
+    el.appendChild(item);
+  });
 }
 
 // ── 자산 현황 ──
@@ -1156,41 +1201,79 @@ function renderAssets() {
   var catSub = {};
   list.forEach(a=>{ catSub[a.cat]=(catSub[a.cat]||0)+a.amt; });
 
-  el.innerHTML = list.map(a=>{
+  el.innerHTML = '';
+  list.forEach(function(a) {
     var isEditing = editingAssetId === a.id;
-    var editForm = isEditing ? `
-      <div class="asset-edit-form">
-        <div class="asset-edit-row"><label>이름</label><input id="ae-name-${a.id}" value="${a.name}" /></div>
-        <div class="asset-edit-row"><label>카테고리</label>
-          <select id="ae-cat-${a.id}">
-            ${['현금·예금','주식·ETF','연금·IRP','청약','부동산','기타'].map(c=>`<option value="${c}" ${a.cat===c?'selected':''}>${c}</option>`).join('')}
-          </select>
-        </div>
-        <div class="asset-edit-row"><label>금액</label><input id="ae-amt-${a.id}" value="${a.amt.toLocaleString()}" inputmode="numeric" oninput="formatComma(this)" /></div>
-        <div class="asset-edit-row"><label>메모</label><input id="ae-memo-${a.id}" value="${a.memo||''}" placeholder="메모" /></div>
-        <div class="asset-edit-btns">
-          <button class="btn-edit-save" onclick="event.stopPropagation();window.saveAssetEdit('${a.id}')">저장</button>
-          <button class="btn-edit-cancel" onclick="event.stopPropagation();window.editingAssetId=null;window.renderAssetsPublic()">취소</button>
-        </div>
-      </div>` : '';
-    return `
-    <div class="asset-item" style="flex-direction:column;align-items:stretch;cursor:pointer" onclick="if(event.target.tagName==='BUTTON'||event.target.tagName==='INPUT'||event.target.tagName==='SELECT')return;window.toggleAssetEdit('${a.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="asset-item-left">
-          <span class="asset-dot" style="background:${assetColors[a.cat]||'#9e9d97'}"></span>
-          <div>
-            <div class="asset-name">${a.name}</div>
-            <div class="asset-cat-badge">${a.cat}${a.memo?' · '+a.memo:''}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span class="asset-amt" style="color:${isEditing?'var(--green)':'inherit'}">${fmt(a.amt)}</span>
-          <button class="asset-del" onclick="event.stopPropagation();window.delAsset('${a.id}')">×</button>
-        </div>
-      </div>
-      ${editForm}
-    </div>`;
-  }).join('');
+    var item = document.createElement('div');
+    item.className = 'asset-item';
+    item.style.cssText = 'flex-direction:column;align-items:stretch;cursor:pointer';
+
+    // 상단 행
+    var top = document.createElement('div');
+    top.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+    top.innerHTML = '<div class="asset-item-left"><span class="asset-dot" style="background:' + (assetColors[a.cat]||'#9e9d97') + '"></span><div><div class="asset-name">' + a.name + '</div><div class="asset-cat-badge">' + a.cat + (a.memo?' · '+a.memo:'') + '</div></div></div>';
+    var right = document.createElement('div');
+    right.style.cssText = 'display:flex;align-items:center;gap:10px';
+    var amtSpan = document.createElement('span');
+    amtSpan.className = 'asset-amt';
+    amtSpan.style.color = isEditing ? 'var(--green)' : '';
+    amtSpan.textContent = fmt(a.amt);
+    var delBtn = document.createElement('button');
+    delBtn.className = 'asset-del';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', function(e) { e.stopPropagation(); window.delAsset(a.id); });
+    right.appendChild(amtSpan);
+    right.appendChild(delBtn);
+    top.appendChild(right);
+    item.appendChild(top);
+
+    // 편집 폼
+    if(isEditing) {
+      var form = document.createElement('div');
+      form.className = 'asset-edit-form';
+      // 이름
+      var nameRow = document.createElement('div'); nameRow.className = 'asset-edit-row';
+      var nameInput = document.createElement('input'); nameInput.value = a.name;
+      nameInput.id = 'ae-name-' + a.id;
+      nameRow.innerHTML = '<label>이름</label>'; nameRow.appendChild(nameInput);
+      // 카테고리
+      var catRow = document.createElement('div'); catRow.className = 'asset-edit-row';
+      var catSel = document.createElement('select'); catSel.id = 'ae-cat-' + a.id;
+      ['현금·예금','주식·ETF','연금·IRP','청약','부동산','기타'].forEach(function(c) {
+        var opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+        if(a.cat === c) opt.selected = true; catSel.appendChild(opt);
+      });
+      catRow.innerHTML = '<label>카테고리</label>'; catRow.appendChild(catSel);
+      // 금액
+      var amtRow = document.createElement('div'); amtRow.className = 'asset-edit-row';
+      var amtInput = document.createElement('input'); amtInput.value = a.amt.toLocaleString();
+      amtInput.id = 'ae-amt-' + a.id; amtInput.setAttribute('inputmode','numeric');
+      amtInput.addEventListener('input', function() { window.formatComma(this); });
+      amtRow.innerHTML = '<label>금액</label>'; amtRow.appendChild(amtInput);
+      // 메모
+      var memoRow = document.createElement('div'); memoRow.className = 'asset-edit-row';
+      var memoInput = document.createElement('input'); memoInput.value = a.memo||'';
+      memoInput.id = 'ae-memo-' + a.id; memoInput.placeholder = '메모';
+      memoRow.innerHTML = '<label>메모</label>'; memoRow.appendChild(memoInput);
+      // 버튼
+      var btnRow = document.createElement('div'); btnRow.className = 'asset-edit-btns';
+      var saveBtn = document.createElement('button'); saveBtn.className = 'btn-edit-save'; saveBtn.textContent = '저장';
+      saveBtn.addEventListener('click', function(e) { e.stopPropagation(); window.saveAssetEdit(a.id); });
+      var cancelBtn = document.createElement('button'); cancelBtn.className = 'btn-edit-cancel'; cancelBtn.textContent = '취소';
+      cancelBtn.addEventListener('click', function(e) { e.stopPropagation(); editingAssetId=null; renderAssets(); });
+      btnRow.appendChild(saveBtn); btnRow.appendChild(cancelBtn);
+      form.appendChild(nameRow); form.appendChild(catRow); form.appendChild(amtRow);
+      form.appendChild(memoRow); form.appendChild(btnRow);
+      item.appendChild(form);
+    }
+
+    // 클릭 토글
+    item.addEventListener('click', function(e) {
+      if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+      window.toggleAssetEdit(a.id);
+    });
+    el.appendChild(item);
+  });
 }
 
 function renderSavings() {
@@ -1431,49 +1514,52 @@ function renderTabSortList() {
     var tab = DEFAULT_TABS.find(t=>t.id===id);
     if(!tab) return;
     var hidden = hiddenTabs.includes(id);
+
     var item = document.createElement('div');
-    item.setAttribute('draggable', !hidden);
-    item.dataset.id = id;
-    item.dataset.idx = i;
-    item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);user-select:none;border:1.5px solid transparent;transition:all 0.15s;opacity:'+(hidden?'0.4':'1');
-    if(!hidden) item.style.cursor='grab';
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);opacity:'+(hidden?'0.45':'1')+';transition:opacity 0.15s';
 
     // 체크박스
     var cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !hidden;
-    cb.style.cssText = 'width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
+    cb.type = 'checkbox'; cb.checked = !hidden;
+    cb.style.cssText = 'width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
     cb.addEventListener('change', function() {
       if(cb.checked) hiddenTabs = hiddenTabs.filter(h=>h!==id);
-      else hiddenTabs.push(id);
+      else { if(hiddenTabs.indexOf(id)===-1) hiddenTabs.push(id); }
       renderTabSortList();
     });
 
-    item.innerHTML = '<span style="color:var(--text3);font-size:15px">'+(hidden?'':'☰')+'</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">'+tab.svg+'</svg><span style="font-size:14px;font-weight:500;flex:1">'+tab.label+'</span>';
-    item.insertBefore(cb, item.firstChild);
+    // 아이콘 + 라벨
+    var icon = document.createElement('div');
+    icon.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0';
+    icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">'+tab.svg+'</svg><span style="font-size:14px;font-weight:500">'+tab.label+'</span>';
 
-    if(!hidden) {
-      item.addEventListener('dragstart', function(e) {
-        e.dataTransfer.setData('text/plain', i);
-        item.style.opacity='0.4';
-      });
-      item.addEventListener('dragend', function() { item.style.opacity='1'; });
-      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        item.style.borderColor='var(--green)';
-      });
-      item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
-      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        item.style.borderColor='transparent';
-        var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-        var toIdx = i;
-        if(fromIdx===toIdx) return;
-        var moved = tabOrder.splice(fromIdx,1)[0];
-        tabOrder.splice(toIdx,0,moved);
-        renderTabSortList();
-      });
-    }
+    // 위/아래 버튼
+    var upBtn = document.createElement('button');
+    upBtn.textContent = '▲';
+    upBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit';
+    upBtn.disabled = i === 0;
+    upBtn.style.opacity = i === 0 ? '0.3' : '1';
+    upBtn.addEventListener('click', function() {
+      if(i===0) return;
+      var t = tabOrder[i]; tabOrder[i]=tabOrder[i-1]; tabOrder[i-1]=t;
+      renderTabSortList();
+    });
+
+    var dnBtn = document.createElement('button');
+    dnBtn.textContent = '▼';
+    dnBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit';
+    dnBtn.disabled = i === tabOrder.length-1;
+    dnBtn.style.opacity = i === tabOrder.length-1 ? '0.3' : '1';
+    dnBtn.addEventListener('click', function() {
+      if(i===tabOrder.length-1) return;
+      var t = tabOrder[i]; tabOrder[i]=tabOrder[i+1]; tabOrder[i+1]=t;
+      renderTabSortList();
+    });
+
+    item.appendChild(cb);
+    item.appendChild(icon);
+    item.appendChild(upBtn);
+    item.appendChild(dnBtn);
     list.appendChild(item);
   });
 }
