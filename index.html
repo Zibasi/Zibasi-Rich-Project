@@ -289,11 +289,30 @@
           <span style="font-size:12px;background:var(--surface2);padding:4px 10px;border-radius:20px;color:var(--text2)" id="home-exchange">환율 로딩중...</span>
         </div>
         <div class="stat-grid" style="grid-template-columns:1fr 1fr">
-        <div class="stat-box"><div class="s-label">총 자산</div><div class="s-val green" id="home-total">0원</div></div>
-        <div class="stat-box"><div class="s-label">이번 달 지출</div><div class="s-val" id="home-spend">0원</div></div>
-        <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
-        <div class="stat-box"><div class="s-label">이달 저축 가능</div><div class="s-val green" id="home-surplus">0원</div></div>
-      </div>
+          <div class="stat-box"><div class="s-label">순자산</div><div class="s-val green" id="home-total">0원</div></div>
+          <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
+        </div>
+        <div class="card" style="margin-top:12px;padding:14px 16px">
+          <div class="card-label" style="margin-bottom:10px">이달 수지</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text2)">월 수입</span>
+            <span id="home-income-val" style="font-weight:600;color:var(--blue)">0원</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text2)">고정지출</span>
+            <span id="home-fixed-val" style="font-weight:600;color:var(--red)">0원</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text2)">이달 변동지출</span>
+            <span id="home-spend" style="font-weight:600;color:var(--red)">0원</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;padding:8px 0 2px;font-weight:600">
+            <span>저축 가능액</span>
+            <span id="home-surplus" style="color:var(--green)">0원</span>
+          </div>
+          <div class="prog-track" style="margin-top:8px"><div class="prog-fill" id="home-surplus-bar" style="width:0%"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right" id="home-surplus-pct"></div>
+        </div>
       <div class="card">
         <div class="card-label">이달 투자 목표</div>
         <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace" id="home-prog-val">0 / 50만원</div>
@@ -1468,10 +1487,29 @@ function renderHome() {
   const wEl=document.getElementById('home-wedding-dday');
   wEl.textContent=wDiff>0?'D-'+wDiff:(wDiff===0?'D-DAY':'D+'+Math.abs(wDiff));
   wEl.style.color=wDiff<=30?'var(--red)':wDiff<=90?'var(--amber)':'var(--blue)';
-  // 이달 저축 가능 (수입 220만 - 지출)
-  const income=getVal('cf-income')||2200000;
-  const surplus=Math.max(0,income-mSpend);
-  document.getElementById('home-surplus').textContent=fmt(surplus);
+  // 이달 수지 (수입 - 고정지출 - 변동지출)
+  const fs2 = JSON.parse(localStorage.getItem('financeSettings')||'null');
+  const income = (fs2&&fs2.income) ? fs2.income : (getVal('cf-income')||2200000);
+  const fixed  = (fs2&&fs2.fixed)  ? fs2.fixed  : 0;
+  const surplus = income - fixed - mSpend;
+
+  var incomeEl = document.getElementById('home-income-val');
+  var fixedEl  = document.getElementById('home-fixed-val');
+  var surplusEl = document.getElementById('home-surplus');
+  var surplusBar = document.getElementById('home-surplus-bar');
+  var surplusPct = document.getElementById('home-surplus-pct');
+
+  if(incomeEl) incomeEl.textContent = fmt(income);
+  if(fixedEl)  fixedEl.textContent  = fmt(fixed);
+  if(surplusEl) {
+    surplusEl.textContent = fmt(Math.abs(surplus));
+    surplusEl.style.color = surplus >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+  if(surplusBar && income > 0) {
+    var pct = Math.max(0, Math.round(surplus / income * 100));
+    surplusBar.style.width = Math.min(100, pct) + '%';
+    if(surplusPct) surplusPct.textContent = '수입 대비 ' + pct + '% 저축 가능';
+  }
 }
 
 // ── 탭 순서 관리 ──
@@ -1684,14 +1722,22 @@ var exRates = {}; // KRW 기준 각 통화 비율
 async function fetchExchangeRates() {
   try {
     document.getElementById('ex-status').textContent = '불러오는 중...';
-    // open.er-api.com 무료 API (인증 불필요)
-    var res = await fetch('https://open.er-api.com/v6/latest/USD');
-    var data = await res.json();
-    if(data.result !== 'success') throw new Error('API 오류');
-    var usdKrw = data.rates['KRW'];
+    // API 1: exchangerate-api (무료, CORS 허용)
+    var res, data, usdKrw;
+    try {
+      res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      data = await res.json();
+      usdKrw = data.rates['KRW'];
+    } catch(e1) {
+      // API 2: fawazahmed0 (백업)
+      res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+      data = await res.json();
+      usdKrw = data.usd['krw'];
+      data.rates = { KRW: data.usd['krw'], JPY: data.usd['jpy'], EUR: data.usd['eur'], CNY: data.usd['cny'] };
+    }
     exRates['KRW'] = 1;
     exRates['USD'] = Math.round(usdKrw);
-    exRates['JPY'] = Math.round(usdKrw / data.rates['JPY'] * 100); // 100엔
+    exRates['JPY'] = Math.round(usdKrw / data.rates['JPY'] * 100);
     exRates['EUR'] = Math.round(usdKrw / data.rates['EUR']);
     exRates['CNY'] = Math.round(usdKrw / data.rates['CNY']);
 
