@@ -137,6 +137,9 @@
   /* 지출 차트 */
   .mini-chart-wrap { margin-top: 4px; }
   .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  /* 홈 카드 순서 */
+  .home-sort-item { display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;cursor:grab;user-select:none;border:1.5px solid transparent;transition:border-color 0.15s; }
+
   /* 환율 */
   .exchange-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
   .exchange-rate-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
@@ -285,14 +288,29 @@
 
   <div class="content">
     <div class="page active" id="page-home">
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="home-ex-row">
-          <span style="font-size:12px;background:var(--surface2);padding:4px 10px;border-radius:20px;color:var(--text2)" id="home-exchange">환율 로딩중...</span>
+      <div id="home-ex-row" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--text3)">🇺🇸 USD</span>
+            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-usd">-</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--text3)">🇯🇵 JPY</span>
+            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-jpy">-</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--text3)">🇪🇺 EUR</span>
+            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-eur">-</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--text3)">🇨🇳 CNY</span>
+            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-cny">-</span>
+          </div>
         </div>
-        <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+        <div class="stat-grid" id="home-stats-grid" style="grid-template-columns:1fr 1fr">
           <div class="stat-box"><div class="s-label">순자산</div><div class="s-val green" id="home-total">0원</div></div>
           <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
         </div>
-        <div class="card" style="margin-top:12px;padding:14px 16px">
+        <div class="card" id="home-cashflow-card" style="margin-top:12px;padding:14px 16px">
           <div class="card-label" style="margin-bottom:10px">이달 수지</div>
           <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
             <span style="color:var(--text2)">월 수입</span>
@@ -313,7 +331,7 @@
           <div class="prog-track" style="margin-top:8px"><div class="prog-fill" id="home-surplus-bar" style="width:0%"></div></div>
           <div style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right" id="home-surplus-pct"></div>
         </div>
-      <div class="card">
+      <div class="card" id="home-invest-goal-card">
         <div class="card-label">이달 투자 목표</div>
         <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace" id="home-prog-val">0 / 50만원</div>
         <div class="prog-wrap"><div class="prog-track"><div class="prog-fill" id="home-prog-bar" style="width:0%"></div></div></div>
@@ -329,7 +347,7 @@
           <div style="text-align:right"><div style="font-size:14px;font-weight:600;font-family:'DM Mono',monospace" class="pos">+6.8%</div><div style="font-size:11px" class="pos">+68,000원</div></div>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="home-recent-card">
         <div class="card-label">최근 투자 기록</div>
         <div id="home-recent"><div class="empty">아직 기록이 없어요</div></div>
       </div>
@@ -642,7 +660,12 @@
         <div class="form-row"><label>대출 원금 (원)</label><input type="text" inputmode="numeric" id="ln-principal" placeholder="0" oninput="formatComma(this)" /></div>
         <div class="form-row"><label>현재 잔액 (원)</label><input type="text" inputmode="numeric" id="ln-balance" placeholder="0" oninput="formatComma(this)" /></div>
         <div class="form-row"><label>연이율 (%)</label><input type="number" id="ln-rate" placeholder="4.5" step="0.01" /></div>
-        <div class="form-row"><label>월 상환액 (원)</label><input type="text" inputmode="numeric" id="ln-monthly" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>월 상환액 (원)</label><input type="text" inputmode="numeric" id="ln-monthly" placeholder="0" oninput="formatComma(this);calcLoanSplit()" /></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="form-row" style="margin-bottom:0"><label style="font-size:11px">이 중 이자</label><input type="text" inputmode="numeric" id="ln-interest" placeholder="자동계산" oninput="formatComma(this)" style="font-size:12px" /></div>
+          <div class="form-row" style="margin-bottom:0"><label style="font-size:11px">원금 상환</label><input type="text" inputmode="numeric" id="ln-principal-pay" placeholder="자동계산" oninput="formatComma(this)" style="font-size:12px" /></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px" id="ln-split-hint">이율 입력 시 이자/원금 자동 계산돼요</div>
         <div class="form-row"><label>만기일</label><input type="date" id="ln-due" /></div>
         <div class="form-row"><label>메모</label><input type="text" id="ln-memo" placeholder="생활비 마련" /></div>
         <button class="btn btn-primary" onclick="addLoan()">추가</button>
@@ -720,6 +743,22 @@
         <div id="set-finance-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✓ 저장됐어요</div>
       </div>
 
+      <!-- 고정지출 항목 관리 -->
+      <div class="card">
+        <div class="card-label">고정지출 항목 관리</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">월세, 통신비, 보험료 등 매달 나가는 항목</div>
+        <div id="fixed-expense-list" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="fe-name" placeholder="항목명 (예: 월세)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit" />
+          <input type="text" inputmode="numeric" id="fe-amt" placeholder="금액" oninput="formatComma(this)" style="width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:'DM Mono',monospace" />
+          <button onclick="addFixedExpense()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">추가</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
+          <span style="font-size:13px;font-weight:600">월 고정지출 합계</span>
+          <span style="font-size:15px;font-weight:600;color:var(--red);font-family:'DM Mono',monospace" id="fe-total">0원</span>
+        </div>
+      </div>
+
       <!-- 결혼 예정일 -->
       <div class="card">
         <div class="card-label">결혼 예정일 설정</div>
@@ -749,6 +788,14 @@
             </span>
           </label>
         </div>
+      </div>
+
+      <!-- 홈 카드 순서 -->
+      <div class="card">
+        <div class="card-label">홈 카드 순서</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">드래그 또는 ↑↓로 순서 변경</div>
+        <div id="home-card-sort-list"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveHomeCardOrder()">저장</button>
       </div>
 
       <!-- 탭 관리 -->
@@ -948,6 +995,145 @@ window.delSavings = async (id) => {
   await deleteDoc(doc(db,'users',uid,'savings',id));
   savings=savings.filter(x=>x.id!==id); renderSavings();
 };
+// ── 고정지출 항목 관리 ──
+var fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
+
+window.addFixedExpense = function() {
+  var name = document.getElementById('fe-name').value.trim();
+  var amt  = parseInt((document.getElementById('fe-amt').value||'0').replace(/[^0-9]/g,''))||0;
+  if(!name||!amt) return alert('항목명과 금액을 입력해주세요.');
+  fixedExpenses.push({id: Date.now()+'', name, amt});
+  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+  document.getElementById('fe-name').value = '';
+  document.getElementById('fe-amt').value  = '';
+  renderFixedExpenses();
+  renderHome();
+};
+
+window.delFixedExpense = function(id) {
+  fixedExpenses = fixedExpenses.filter(f=>f.id!==id);
+  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+  renderFixedExpenses();
+  renderHome();
+};
+
+function renderFixedExpenses() {
+  var el = document.getElementById('fixed-expense-list');
+  if(!el) return;
+  if(!fixedExpenses.length) { el.innerHTML='<div style="font-size:13px;color:var(--text3);padding:6px 0">항목이 없어요</div>'; }
+  else {
+    el.innerHTML = '';
+    fixedExpenses.forEach(function(f) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)';
+      var nameSpan = document.createElement('span');
+      nameSpan.style.fontSize = '13px';
+      nameSpan.textContent = f.name;
+      var right = document.createElement('div');
+      right.style.cssText = 'display:flex;align-items:center;gap:10px';
+      var amtSpan = document.createElement('span');
+      amtSpan.style.fontSize="13px"; amtSpan.style.fontWeight="600"; amtSpan.style.fontFamily="DM Mono,monospace";
+      amtSpan.textContent = fmt(f.amt);
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '×';
+      delBtn.style.cssText = 'background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px';
+      delBtn.addEventListener('click', function() { window.delFixedExpense(f.id); });
+      right.appendChild(amtSpan); right.appendChild(delBtn);
+      row.appendChild(nameSpan); row.appendChild(right);
+      el.appendChild(row);
+    });
+  }
+  var total = fixedExpenses.reduce((s,f)=>s+f.amt,0);
+  var totalEl = document.getElementById('fe-total');
+  if(totalEl) totalEl.textContent = fmt(total);
+}
+
+// ── 홈 카드 순서 ──
+var HOME_CARDS = [
+  {id:'exchange', label:'환율'},
+  {id:'stats', label:'순자산 / D-day'},
+  {id:'cashflow', label:'이달 수지'},
+  {id:'invest-goal', label:'투자 목표'},
+  {id:'recent', label:'최근 투자 기록'},
+];
+var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(c=>c.id);
+
+function renderHomeCardSortList() {
+  var el = document.getElementById('home-card-sort-list');
+  if(!el) return;
+  el.innerHTML = '';
+  homeCardOrder.forEach(function(id, i) {
+    var card = HOME_CARDS.find(c=>c.id===id);
+    if(!card) return;
+    var item = document.createElement('div');
+    item.className = 'home-sort-item';
+    item.innerHTML = '<span style="color:var(--text3)">☰</span><span style="flex:1;font-size:14px">'+card.label+'</span>';
+    var upBtn = document.createElement('button');
+    upBtn.textContent='↑'; upBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--text2);cursor:pointer';
+    upBtn.addEventListener('click', function(e){e.stopPropagation(); if(i===0)return; homeCardOrder.splice(i-1,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList();});
+    var dnBtn = document.createElement('button');
+    dnBtn.textContent='↓'; dnBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--text2);cursor:pointer';
+    dnBtn.addEventListener('click', function(e){e.stopPropagation(); if(i>=homeCardOrder.length-1)return; homeCardOrder.splice(i+1,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList();});
+    // 터치 드래그
+    item.addEventListener('touchstart', function(){item._from=i;item.style.opacity='0.5';},{passive:true});
+    item.addEventListener('touchend', function(e){
+      item.style.opacity='1';
+      var t=e.changedTouches[0]; var toIdx=i;
+      document.querySelectorAll('.home-sort-item').forEach(function(el2,idx2){
+        el2.style.borderTop='';
+        var r=el2.getBoundingClientRect();
+        if(t.clientY>=r.top&&t.clientY<=r.bottom) toIdx=idx2;
+      });
+      if(toIdx!==i){ homeCardOrder.splice(toIdx,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList(); }
+    },{passive:true});
+    item.addEventListener('touchmove', function(e){
+      var t=e.touches[0];
+      document.querySelectorAll('.home-sort-item').forEach(function(el2){
+        var r=el2.getBoundingClientRect();
+        el2.style.borderTop=(t.clientY>=r.top&&t.clientY<=r.bottom)?'2px solid var(--green)':'';
+      });
+    },{passive:true});
+    item.appendChild(upBtn); item.appendChild(dnBtn);
+    el.appendChild(item);
+  });
+}
+
+window.saveHomeCardOrder = function() {
+  localStorage.setItem('homeCardOrder', JSON.stringify(homeCardOrder));
+  applyHomeCardOrder();
+  alert('저장됐어요! ✓');
+};
+
+function applyHomeCardOrder() {
+  var homePageEl = document.getElementById('page-home');
+  if(!homePageEl) return;
+  var cardMap = {
+    'exchange': document.getElementById('home-ex-row'),
+    'stats': document.querySelector('.stat-grid'),
+    'cashflow': document.getElementById('home-cashflow-card'),
+    'invest-goal': document.getElementById('home-invest-goal-card'),
+    'recent': document.getElementById('home-recent-card'),
+  };
+  homeCardOrder.forEach(function(id) {
+    var el = cardMap[id];
+    if(el && el.parentNode === homePageEl) homePageEl.appendChild(el);
+  });
+}
+
+// ── 대출 이자/원금 자동 계산 ──
+window.calcLoanSplit = function() {
+  var monthly  = parseInt((document.getElementById('ln-monthly').value||'0').replace(/[^0-9]/g,''))||0;
+  var balance  = parseInt((document.getElementById('ln-balance').value||'0').replace(/[^0-9]/g,''))||0;
+  var rate     = parseFloat(document.getElementById('ln-rate').value)||0;
+  if(!monthly || !balance || !rate) return;
+  var monthInterest  = Math.round(balance * (rate/100) / 12);
+  var monthPrincipal = Math.max(0, monthly - monthInterest);
+  document.getElementById('ln-interest').value      = monthInterest.toLocaleString();
+  document.getElementById('ln-principal-pay').value = monthPrincipal.toLocaleString();
+  document.getElementById('ln-split-hint').textContent =
+    '이자 ' + fmt(monthInterest) + ' + 원금상환 ' + fmt(monthPrincipal);
+};
+
 // ── 대출 관리 ──
 var loanTypeColor = {
   '신용대출':'#c0392b','전세대출':'#b45309','주택담보':'#7c3aed','학자금':'#1e5fa8','기타':'#9e9d97'
@@ -960,14 +1146,16 @@ window.addLoan = async () => {
   var balance   = getVal('ln-balance');
   var rate      = parseFloat(document.getElementById('ln-rate').value)||0;
   var monthly   = getVal('ln-monthly');
+  var interest  = getVal('ln-interest');
+  var principalPay = getVal('ln-principal-pay');
   var due       = document.getElementById('ln-due').value;
   var memo      = document.getElementById('ln-memo').value.trim();
   if(!name||!balance) return alert('대출명과 잔액을 입력해주세요.');
-  var data = {name,type,principal,balance,rate,monthly,due,memo,createdAt:Date.now()};
+  var data = {name,type,principal,balance,rate,monthly,interest,principalPay,due,memo,createdAt:Date.now()};
   var ref  = await addDoc(col('loans'),data);
   loans.unshift({id:ref.id,...data});
   playBeep();
-  ['ln-name','ln-principal','ln-balance','ln-rate','ln-monthly','ln-due','ln-memo'].forEach(id=>{
+  ['ln-name','ln-principal','ln-balance','ln-rate','ln-monthly','ln-interest','ln-principal-pay','ln-due','ln-memo'].forEach(id=>{
     document.getElementById(id).value='';
   });
   renderLoans(); renderHome();
@@ -1055,6 +1243,7 @@ function renderLoans() {
       l.rate ? ['연이율', l.rate+'%'] : null,
       l.monthly ? ['월 상환액', fmt(l.monthly)] : null,
       l.rate ? ['이번 달 이자', '<span style="color:var(--amber)">약 '+fmt(monthInterest)+'</span>'] : null,
+      (l.interest||l.principalPay) ? ['이자 / 원금상환', '<span style="color:var(--amber)">'+fmt(l.interest||0)+'</span> / <span style="color:var(--green)">'+fmt(l.principalPay||0)+'</span>'] : null,
       l.memo ? ['메모', l.memo] : null
     ];
     rows.filter(Boolean).forEach(function(r){
@@ -1490,7 +1679,10 @@ function renderHome() {
   // 이달 수지 (수입 - 고정지출 - 변동지출)
   const fs2 = JSON.parse(localStorage.getItem('financeSettings')||'null');
   const income = (fs2&&fs2.income) ? fs2.income : (getVal('cf-income')||2200000);
-  const fixed  = (fs2&&fs2.fixed)  ? fs2.fixed  : 0;
+  // 고정지출: 항목 합계 우선, 없으면 설정값 사용
+  const feItems = JSON.parse(localStorage.getItem('fixedExpenses')||'[]');
+  const fixedFromItems = feItems.reduce((s,f)=>s+f.amt, 0);
+  const fixed = fixedFromItems > 0 ? fixedFromItems : ((fs2&&fs2.fixed) ? fs2.fixed : 0);
   const surplus = income - fixed - mSpend;
 
   var incomeEl = document.getElementById('home-income-val');
@@ -1598,6 +1790,39 @@ function renderTabSortList() {
     item.appendChild(icon);
     item.appendChild(upBtn);
     item.appendChild(dnBtn);
+
+    // 터치 드래그
+    var touchFromIdx = null;
+    item.addEventListener('touchstart', function(e) {
+      touchFromIdx = i;
+      item.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      item.style.zIndex = '10';
+      item.style.position = 'relative';
+    }, {passive:true});
+    item.addEventListener('touchend', function(e) {
+      item.style.boxShadow = '';
+      item.style.zIndex = '';
+      var t = e.changedTouches[0];
+      var targetIdx = null;
+      document.querySelectorAll('#tab-sort-list > div').forEach(function(el, idx2) {
+        el.style.borderTop = '';
+        var r = el.getBoundingClientRect();
+        if(t.clientY >= r.top && t.clientY <= r.bottom) targetIdx = idx2;
+      });
+      if(targetIdx !== null && targetIdx !== touchFromIdx) {
+        var moved = tabOrder.splice(touchFromIdx, 1)[0];
+        tabOrder.splice(targetIdx, 0, moved);
+        renderTabSortList();
+      }
+    }, {passive:true});
+    item.addEventListener('touchmove', function(e) {
+      var t = e.touches[0];
+      document.querySelectorAll('#tab-sort-list > div').forEach(function(el) {
+        var r = el.getBoundingClientRect();
+        el.style.borderTop = (t.clientY >= r.top && t.clientY <= r.bottom) ? '2px solid var(--green)' : '';
+      });
+    }, {passive:true});
+
     list.appendChild(item);
   });
 }
@@ -1676,14 +1901,20 @@ window.resetAppSettings = function() {
 };
 
 function loadSettings() {
+  // 고정지출 항목 로드
+  fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
+  // 홈 카드 순서 로드
+  homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(c=>c.id);
   // 숨김 탭 로드
   hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
+  // tabOrder 로드
+  tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(t=>t.id);
   // 재무 설정
   var fs = JSON.parse(localStorage.getItem('financeSettings') || 'null');
   if(fs) {
-    if(fs.income) document.getElementById('set-income').value = fs.income.toLocaleString();
-    if(fs.fixed) document.getElementById('set-fixed').value = fs.fixed.toLocaleString();
-    if(fs.pocket) document.getElementById('set-pocket').value = fs.pocket.toLocaleString();
+    if(fs.income) { document.getElementById('set-income').value = fs.income.toLocaleString(); }
+    if(fs.fixed)  { document.getElementById('set-fixed').value  = fs.fixed.toLocaleString(); }
+    if(fs.pocket) { document.getElementById('set-pocket').value = fs.pocket.toLocaleString(); }
     var cfEl = document.getElementById('cf-income');
     if(cfEl && fs.income) cfEl.value = fs.income.toLocaleString();
   }
@@ -1691,6 +1922,13 @@ function loadSettings() {
   var wd = localStorage.getItem('weddingDate') || '2027-09-04';
   document.getElementById('set-wedding-date').value = wd;
   document.getElementById('wd-date').value = wd;
+  // 결혼 목표/저축 기본값도 localStorage 우선
+  var wdGoal = localStorage.getItem('wdGoal');
+  var wdSaved = localStorage.getItem('wdSaved');
+  var wdMonthly = localStorage.getItem('wdMonthly');
+  if(wdGoal) document.getElementById('wd-goal').value = parseInt(wdGoal).toLocaleString();
+  if(wdSaved) document.getElementById('wd-saved').value = parseInt(wdSaved).toLocaleString();
+  if(wdMonthly) document.getElementById('wd-monthly').value = parseInt(wdMonthly).toLocaleString();
   // 다크모드
   var dm = localStorage.getItem('darkMode') === '1';
   if(dm) {
@@ -1752,9 +1990,14 @@ async function fetchExchangeRates() {
     document.getElementById('ex-status').textContent = '✓ 최신';
     document.getElementById('ex-status').style.color = 'var(--green)';
 
-    var homeEx = document.getElementById('home-exchange');
-    if(homeEx) homeEx.textContent = '1달러 = ' + exRates['USD'].toLocaleString() + '원';
-
+    var fmt2 = n => n.toLocaleString()+'원';
+    var h = {usd:'home-ex-usd',jpy:'home-ex-jpy',eur:'home-ex-eur',cny:'home-ex-cny'};
+    if(document.getElementById('home-ex-usd')) {
+      document.getElementById('home-ex-usd').textContent = fmt2(exRates['USD']);
+      document.getElementById('home-ex-jpy').textContent = fmt2(exRates['JPY']);
+      document.getElementById('home-ex-eur').textContent = fmt2(exRates['EUR']);
+      document.getElementById('home-ex-cny').textContent = fmt2(exRates['CNY']);
+    }
     calcExchange();
   } catch(e) {
     // API 실패 시 fallback 고정값
@@ -1767,8 +2010,12 @@ async function fetchExchangeRates() {
     document.getElementById('ex-status').textContent = '⚠ 임시값';
     document.getElementById('ex-status').style.color = 'var(--amber)';
     document.getElementById('ex-updated').textContent = '실시간 연결 실패 (참고용)';
-    var homeEx = document.getElementById('home-exchange');
-    if(homeEx) homeEx.textContent = '1달러 ≈ 1,380원 (참고)';
+    if(document.getElementById('home-ex-usd')) {
+      document.getElementById('home-ex-usd').textContent = '1,380원';
+      document.getElementById('home-ex-jpy').textContent = '920원';
+      document.getElementById('home-ex-eur').textContent = '1,520원';
+      document.getElementById('home-ex-cny').textContent = '190원';
+    }
     calcExchange();
     console.log('환율 오류:', e);
   }
@@ -1806,7 +2053,11 @@ window.goPage = (id,btn) => {
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='cashflow') renderCashflow();
-  if(id==='settings') renderTabSortList();
+  if(id==='settings') {
+    renderTabSortList();
+    renderHomeCardSortList();
+    renderFixedExpenses();
+  }
   if(id==='assets') renderAssets();
   if(id==='loan') renderLoans();
   if(id==='exchange') fetchExchangeRates();
@@ -1847,6 +2098,11 @@ window.calcWedding = () => {
     advice = `현재 페이스로는 목표보다 ${fmt(Math.abs(diff))} 부족해요. 월 ${need.toLocaleString()}원을 더 저축하거나, 목표 금액을 ${fmt(expected)}으로 조정해보세요.`;
   }
   document.getElementById('wd-advice').textContent = advice;
+  // 입력값 localStorage에 저장
+  localStorage.setItem('weddingDate', dateVal);
+  localStorage.setItem('wdGoal', goal);
+  localStorage.setItem('wdSaved', saved);
+  localStorage.setItem('wdMonthly', monthly);
 };
 
 // ── 연금 납입 현황 ──
@@ -1928,14 +2184,26 @@ document.getElementById('header-date').textContent=now.getFullYear()+'년 '+(now
 document.getElementById('inv-month').value=now.toISOString().slice(0,7);
 document.getElementById('sp-date').value=todayStr();
 document.getElementById('sp-filter-month').value=now.toISOString().slice(0,7);
+// 1. 설정 먼저 로드 (localStorage → 화면 반영)
+loadSettings();
+// 2. 네비 렌더 (hiddenTabs, tabOrder 반영)
 renderNav();
-// 결혼일 기본값 (2027-09-04)
-document.getElementById('wd-date').value='2027-09-04';
-document.getElementById('wd-goal').value='15,000,000';
-document.getElementById('wd-saved').value='300,000';
-document.getElementById('wd-monthly').value='700,000';
-// 수지 월 초기화
+// 3. 결혼일 기본값 - localStorage에 없을 때만 세팅
+if(!localStorage.getItem('weddingDate')) {
+  document.getElementById('wd-date').value='2027-09-04';
+  document.getElementById('wd-goal').value='15,000,000';
+  document.getElementById('wd-saved').value='300,000';
+  document.getElementById('wd-monthly').value='700,000';
+}
+// 4. 수입 기본값 - localStorage에 없을 때만 세팅
+if(!localStorage.getItem('financeSettings')) {
+  var cfEl = document.getElementById('cf-income');
+  if(cfEl && !cfEl.value) cfEl.value = '2,200,000';
+}
+// 5. 수지 월 초기화
 document.getElementById('cf-month-label').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
+// 6. 환율 로드
+fetchExchangeRates();
 </script>
 </body>
 </html>
