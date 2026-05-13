@@ -309,7 +309,7 @@
 <div id="app-screen">
   <div class="app-header">
     <div>
-      <h1>💰 우리 재테크 <span class="sync-badge">☁️ 동기화</span></h1>
+      <h1>💰 우리 재테크 <span class="sync-badge" id="sync-status">☁ 동기화</span></h1>
       <div class="date" id="header-date"></div>
     </div>
     <button class="logout-btn" onclick="doLogout()">로그아웃</button>
@@ -906,10 +906,13 @@
 
       <!-- 홈 카드 순서 -->
       <div class="card">
-        <div class="card-label">홈 카드 순서</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">드래그 또는 ↑↓로 순서 변경</div>
+        <div class="card-label">홈 카드 관리</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 홈에서 숨겨져요 · 드래그로 순서 변경</div>
         <div id="home-card-sort-list"></div>
-        <button class="btn btn-primary" style="margin-top:12px" onclick="saveHomeCardOrder()">저장</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" style="flex:2" onclick="saveHomeCardOrder()">저장</button>
+          <button onclick="resetHomeCards()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit">초기화</button>
+        </div>
       </div>
 
       <!-- 탭 관리 -->
@@ -964,7 +967,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyC61cmUgI93VZ6pF2ICV3vpxPb8ne0n5hQ",
@@ -1044,14 +1047,89 @@ window.doSignup = async () => {
 
 window.doLogout = () => signOut(auth);
 
+// 실시간 리스너 언서브스크라이브 함수들
+var unsubs = [];
+
+function setSyncStatus(status) {
+  var el = document.getElementById('sync-status');
+  if(!el) return;
+  if(status==='syncing') { el.textContent='↻ 동기화 중'; el.style.background='var(--amber-bg)'; el.style.color='var(--amber)'; }
+  else if(status==='ok')  { el.textContent='☁ 동기화'; el.style.background='var(--green-bg)'; el.style.color='var(--green)'; }
+  else                    { el.textContent='⚠ 오프라인'; el.style.background='#fef2f2'; el.style.color='var(--red)'; }
+}
+
+window.refreshAll = async function() {
+  var btn = document.getElementById('refresh-btn');
+  if(btn) { btn.textContent='↻ 로딩중...'; btn.disabled=true; }
+  setSyncStatus('syncing');
+  try {
+    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets(),loadLoans()]);
+    renderHome();
+    setSyncStatus('ok');
+  } catch(e) { setSyncStatus('error'); }
+  if(btn) { btn.textContent='↻ 새로고침'; btn.disabled=false; }
+};
+
+function startRealtimeListeners() {
+  // 기존 리스너 해제
+  unsubs.forEach(function(u){try{u();}catch(e){}});
+  unsubs = [];
+
+  function makeListener(colName, arr, renderFn, sortFn) {
+    var q = query(col(colName), orderBy('createdAt','desc'));
+    var unsub = onSnapshot(q, function(snap) {
+      var data = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      if(sortFn) data.sort(sortFn);
+      eval(arr + ' = data');
+      try { renderFn(); } catch(e){}
+      renderHome();
+      setSyncStatus('ok');
+    }, function(err){ setSyncStatus('error'); console.log('리스너 오류:',err); });
+    unsubs.push(unsub);
+  }
+
+  // 각 컬렉션 실시간 리스너
+  var qI = query(col('invests'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qI, function(snap){
+    invests=snap.docs.map(d=>({id:d.id,...d.data()})); renderInvests(); renderHome(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+
+  var qSp = query(col('spends'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qSp, function(snap){
+    spends=snap.docs.map(d=>({id:d.id,...d.data()})); renderSpends(); renderHome(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+
+  var qM = query(col('memos'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qM, function(snap){
+    memos=snap.docs.map(d=>({id:d.id,...d.data()})); renderMemos(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+
+  var qSv = query(col('savings'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qSv, function(snap){
+    savings=snap.docs.map(d=>({id:d.id,...d.data()})); renderSavings(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+
+  var qA = query(col('assets'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qA, function(snap){
+    assets=snap.docs.map(d=>({id:d.id,...d.data()})); renderAssets(); renderHome(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+
+  var qL = query(col('loans'),orderBy('createdAt','desc'));
+  unsubs.push(onSnapshot(qL, function(snap){
+    loans=snap.docs.map(d=>({id:d.id,...d.data()})); renderLoans(); renderHome(); setSyncStatus('ok');
+  }, function(){setSyncStatus('error');}));
+}
+
 onAuthStateChanged(auth, async (user) => {
   if(user) {
     uid=user.uid;
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
-    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets(),loadLoans()]);
-    renderHome();
+    setSyncStatus('syncing');
+    startRealtimeListeners();
   } else {
+    unsubs.forEach(function(u){try{u();}catch(e){}});
+    unsubs=[];
     uid=null;
     document.getElementById('auth-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
@@ -1179,64 +1257,168 @@ var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') 
 function renderHomeCardSortList() {
   var el = document.getElementById('home-card-sort-list');
   if(!el) return;
+  var hiddenCards = JSON.parse(localStorage.getItem('hiddenHomeCards') || '[]');
   el.innerHTML = '';
+
   homeCardOrder.forEach(function(id, i) {
-    var card = HOME_CARDS.find(c=>c.id===id);
+    var card = HOME_CARDS.find(function(c){return c.id===id;});
     if(!card) return;
+    var hidden = hiddenCards.includes(id);
+
     var item = document.createElement('div');
-    item.className = 'home-sort-item';
-    item.innerHTML = '<span style="color:var(--text3)">☰</span><span style="flex:1;font-size:14px">'+card.label+'</span>';
-    var upBtn = document.createElement('button');
-    upBtn.textContent='↑'; upBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--text2);cursor:pointer';
-    upBtn.addEventListener('click', function(e){e.stopPropagation(); if(i===0)return; homeCardOrder.splice(i-1,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList();});
-    var dnBtn = document.createElement('button');
-    dnBtn.textContent='↓'; dnBtn.style.cssText='background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--text2);cursor:pointer';
-    dnBtn.addEventListener('click', function(e){e.stopPropagation(); if(i>=homeCardOrder.length-1)return; homeCardOrder.splice(i+1,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList();});
-    // 터치 드래그
-    item.addEventListener('touchstart', function(){item._from=i;item.style.opacity='0.5';},{passive:true});
-    item.addEventListener('touchend', function(e){
-      item.style.opacity='1';
-      var t=e.changedTouches[0]; var toIdx=i;
-      document.querySelectorAll('.home-sort-item').forEach(function(el2,idx2){
-        el2.style.borderTop='';
-        var r=el2.getBoundingClientRect();
-        if(t.clientY>=r.top&&t.clientY<=r.bottom) toIdx=idx2;
-      });
-      if(toIdx!==i){ homeCardOrder.splice(toIdx,0,homeCardOrder.splice(i,1)[0]); renderHomeCardSortList(); }
-    },{passive:true});
-    item.addEventListener('touchmove', function(e){
-      var t=e.touches[0];
-      document.querySelectorAll('.home-sort-item').forEach(function(el2){
-        var r=el2.getBoundingClientRect();
-        el2.style.borderTop=(t.clientY>=r.top&&t.clientY<=r.bottom)?'2px solid var(--green)':'';
-      });
-    },{passive:true});
-    item.appendChild(upBtn); item.appendChild(dnBtn);
+    item.dataset.id = id;
+    item.dataset.idx = String(i);
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;border:2px solid transparent;transition:border-color 0.15s;opacity:'+(hidden?'0.4':'1')+';touch-action:none;user-select:none;';
+
+    // 체크박스
+    var cb = document.createElement('input');
+    cb.type='checkbox'; cb.checked=!hidden;
+    cb.style.cssText='width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
+    cb.addEventListener('change', function(){
+      var hc = JSON.parse(localStorage.getItem('hiddenHomeCards')||'[]');
+      if(cb.checked) hc = hc.filter(function(h){return h!==id;});
+      else hc.push(id);
+      localStorage.setItem('hiddenHomeCards', JSON.stringify(hc));
+      renderHomeCardSortList();
+      applyHomeCardOrder();
+    });
+
+    var handle = document.createElement('span');
+    handle.textContent = '⠿';
+    handle.style.cssText = 'color:var(--text3);font-size:18px;cursor:grab;flex-shrink:0;line-height:1';
+
+    var lbl = document.createElement('span');
+    lbl.textContent = card.label;
+    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1';
+
+    item.appendChild(cb);
+    item.appendChild(handle);
+    item.appendChild(lbl);
     el.appendChild(item);
   });
+
+  // PC + 터치 드래그
+  initHomeCardDrag(el);
 }
 
+function initHomeCardDrag(list) {
+  var ghost = null;
+  var items = list.querySelectorAll('[data-idx]');
+
+  items.forEach(function(item) {
+    item.setAttribute('draggable', 'true');
+
+    item.addEventListener('dragstart', function(e) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.dataset.idx);
+      setTimeout(function(){ item.style.opacity='0.3'; }, 0);
+    });
+    item.addEventListener('dragend', function() {
+      var hc = JSON.parse(localStorage.getItem('hiddenHomeCards')||'[]');
+      item.style.opacity = hc.includes(item.dataset.id) ? '0.4' : '1';
+      list.querySelectorAll('[data-idx]').forEach(function(el){ el.style.borderColor='transparent'; });
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      list.querySelectorAll('[data-idx]').forEach(function(el){ el.style.borderColor='transparent'; });
+      item.style.borderColor = 'var(--green)';
+    });
+    item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var from = parseInt(e.dataTransfer.getData('text/plain'));
+      var to = parseInt(item.dataset.idx);
+      if(from===to) return;
+      homeCardOrder.splice(to,0,homeCardOrder.splice(from,1)[0]);
+      renderHomeCardSortList();
+    });
+
+    // 터치 드래그
+    var touchStartY=0, touchStartX=0, isDragging=false;
+    item.addEventListener('touchstart', function(e){
+      touchStartY=e.touches[0].clientY; touchStartX=e.touches[0].clientX; isDragging=false;
+    },{passive:true});
+    item.addEventListener('touchmove', function(e){
+      var dy=Math.abs(e.touches[0].clientY-touchStartY), dx=Math.abs(e.touches[0].clientX-touchStartX);
+      if(!isDragging && dy<8 && dx<8) return;
+      if(!isDragging && dx>dy) return;
+      isDragging=true; e.preventDefault();
+      var t=e.touches[0];
+      if(!ghost){
+        ghost=item.cloneNode(true);
+        ghost.style.cssText+= ';position:fixed;z-index:9999;pointer-events:none;opacity:0.85;box-shadow:0 4px 16px rgba(0,0,0,0.2);width:'+item.offsetWidth+'px;left:'+item.getBoundingClientRect().left+'px;';
+        document.body.appendChild(ghost);
+        item.style.opacity='0.3';
+      }
+      ghost.style.top=(t.clientY-25)+'px';
+      list.querySelectorAll('[data-idx]').forEach(function(el){
+        var r=el.getBoundingClientRect();
+        el.style.borderColor=(t.clientY>=r.top&&t.clientY<=r.bottom&&el!==item)?'var(--green)':'transparent';
+      });
+    },{passive:false});
+    item.addEventListener('touchend', function(e){
+      if(ghost){document.body.removeChild(ghost);ghost=null;}
+      var hc2=JSON.parse(localStorage.getItem('hiddenHomeCards')||'[]');
+      item.style.opacity=hc2.includes(item.dataset.id)?'0.4':'1';
+      list.querySelectorAll('[data-idx]').forEach(function(el){el.style.borderColor='transparent';});
+      if(!isDragging) return;
+      var t=e.changedTouches[0], toIdx=parseInt(item.dataset.idx);
+      list.querySelectorAll('[data-idx]').forEach(function(el){
+        var r=el.getBoundingClientRect();
+        if(t.clientY>=r.top&&t.clientY<=r.bottom&&el!==item) toIdx=parseInt(el.dataset.idx);
+      });
+      var fromIdx=parseInt(item.dataset.idx);
+      if(fromIdx!==toIdx){
+        homeCardOrder.splice(toIdx,0,homeCardOrder.splice(fromIdx,1)[0]);
+        renderHomeCardSortList();
+      }
+    },{passive:true});
+  });
+}
 window.saveHomeCardOrder = function() {
   localStorage.setItem('homeCardOrder', JSON.stringify(homeCardOrder));
   applyHomeCardOrder();
   alert('저장됐어요! ✓');
 };
 
+// 홈 카드 숨김 초기화
+window.resetHomeCards = function() {
+  localStorage.removeItem('hiddenHomeCards');
+  homeCardOrder = HOME_CARDS.map(function(c){return c.id;});
+  localStorage.setItem('homeCardOrder', JSON.stringify(homeCardOrder));
+  applyHomeCardOrder();
+  renderHomeCardSortList();
+};
+
 function applyHomeCardOrder() {
   var homePageEl = document.getElementById('page-home');
   if(!homePageEl) return;
+
+  var hiddenCards = JSON.parse(localStorage.getItem('hiddenHomeCards') || '[]');
+
   var cardMap = {
-    'exchange': document.getElementById('home-ex-row'),
-    'stats': document.querySelector('.stat-grid'),
-    'cashflow': document.getElementById('home-cashflow-card'),
-    'invest-goal': document.getElementById('home-invest-goal-card'),
-    'recent': document.getElementById('home-recent-card'),
+    'exchange':     document.getElementById('home-ex-row'),
+    'stats':        document.getElementById('home-stats-grid'),
+    'cashflow':     document.getElementById('home-cashflow-card'),
+    'invest-goal':  document.getElementById('home-invest-goal-card'),
+    'recent':       document.getElementById('home-recent-card'),
   };
+
+  // 숨김 처리
+  Object.keys(cardMap).forEach(function(id) {
+    var el = cardMap[id];
+    if(!el) return;
+    el.style.display = hiddenCards.includes(id) ? 'none' : '';
+  });
+
+  // 순서 적용
   homeCardOrder.forEach(function(id) {
     var el = cardMap[id];
     if(el && el.parentNode === homePageEl) homePageEl.appendChild(el);
   });
 }
+
+
 
 // ── 대출 이자/원금 자동 계산 ──
 window.calcLoanSplit = function() {
@@ -1863,216 +2045,137 @@ function renderTabSortList() {
   var list = document.getElementById('tab-sort-list');
   list.innerHTML = '';
   tabOrder.forEach(function(id, i) {
-    var tab = DEFAULT_TABS.find(t=>t.id===id);
+    var tab = DEFAULT_TABS.find(function(t){return t.id===id;});
     if(!tab) return;
     var hidden = hiddenTabs.includes(id);
 
     var item = document.createElement('div');
-    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);opacity:'+(hidden?'0.45':'1')+';transition:opacity 0.15s';
+    item.dataset.id = id;
+    item.dataset.idx = String(i);
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;border:2px solid transparent;transition:border-color 0.15s;opacity:'+(hidden?'0.4':'1')+';touch-action:none;user-select:none;';
 
     // 체크박스
     var cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = !hidden;
-    cb.style.cssText = 'width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
-    cb.addEventListener('change', function() {
-      if(cb.checked) hiddenTabs = hiddenTabs.filter(h=>h!==id);
-      else { if(hiddenTabs.indexOf(id)===-1) hiddenTabs.push(id); }
+    cb.type='checkbox'; cb.checked=!hidden;
+    cb.style.cssText='width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
+    cb.addEventListener('change', function(){
+      if(cb.checked) hiddenTabs=hiddenTabs.filter(function(h){return h!==id;});
+      else hiddenTabs.push(id);
       renderTabSortList();
     });
 
-    // 아이콘 + 라벨
-    var icon = document.createElement('div');
-    icon.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0';
-    icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">'+tab.svg+'</svg><span style="font-size:14px;font-weight:500">'+tab.label+'</span>';
+    // 핸들 + 라벨
+    var handle = document.createElement('span');
+    handle.textContent = '⠿';
+    handle.style.cssText = 'color:var(--text3);font-size:18px;cursor:grab;flex-shrink:0;line-height:1';
 
-    // 위/아래 버튼
-    var upBtn = document.createElement('button');
-    upBtn.textContent = '▲';
-    upBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit';
-    upBtn.disabled = i === 0;
-    upBtn.style.opacity = i === 0 ? '0.3' : '1';
-    upBtn.addEventListener('click', function() {
-      if(i===0) return;
-      var t = tabOrder[i]; tabOrder[i]=tabOrder[i-1]; tabOrder[i-1]=t;
-      renderTabSortList();
-    });
-
-    var dnBtn = document.createElement('button');
-    dnBtn.textContent = '▼';
-    dnBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--text2);font-family:inherit';
-    dnBtn.disabled = i === tabOrder.length-1;
-    dnBtn.style.opacity = i === tabOrder.length-1 ? '0.3' : '1';
-    dnBtn.addEventListener('click', function() {
-      if(i===tabOrder.length-1) return;
-      var t = tabOrder[i]; tabOrder[i]=tabOrder[i+1]; tabOrder[i+1]=t;
-      renderTabSortList();
-    });
+    var lbl = document.createElement('span');
+    lbl.textContent = tab.label;
+    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1';
 
     item.appendChild(cb);
-    item.appendChild(icon);
-    item.appendChild(upBtn);
-    item.appendChild(dnBtn);
+    item.appendChild(handle);
+    item.appendChild(lbl);
+    list.appendChild(item);
+  });
 
-    // 터치 드래그
-    var touchFromIdx = null;
+  // 드래그 앤 드롭 초기화
+  initTabDrag(list);
+}
+
+function initTabDrag(list) {
+  var dragSrc = null;
+  var items = list.querySelectorAll('[data-idx]');
+
+  items.forEach(function(item) {
+    // PC 드래그
+    item.setAttribute('draggable', 'true');
+    item.addEventListener('dragstart', function(e) {
+      dragSrc = item;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.dataset.idx);
+      setTimeout(function(){ item.style.opacity='0.3'; }, 0);
+    });
+    item.addEventListener('dragend', function() {
+      item.style.opacity = hiddenTabs.includes(item.dataset.id) ? '0.4' : '1';
+      list.querySelectorAll('[data-idx]').forEach(function(el){ el.style.borderColor='transparent'; });
+    });
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('[data-idx]').forEach(function(el){ el.style.borderColor='transparent'; });
+      item.style.borderColor = 'var(--green)';
+    });
+    item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      var toIdx = parseInt(item.dataset.idx);
+      if(fromIdx===toIdx) return;
+      var moved = tabOrder.splice(fromIdx,1)[0];
+      tabOrder.splice(toIdx,0,moved);
+      renderTabSortList();
+    });
+
+    // 터치 드래그 - 스크롤 방해 없이
+    var touchStartY = 0, touchStartX = 0, isDragging = false, ghost = null;
+
     item.addEventListener('touchstart', function(e) {
-      touchFromIdx = i;
-      item.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-      item.style.zIndex = '10';
-      item.style.position = 'relative';
+      touchStartY = e.touches[0].clientY;
+      touchStartX = e.touches[0].clientX;
+      isDragging = false;
+      dragSrc = item;
     }, {passive:true});
-    item.addEventListener('touchend', function(e) {
-      item.style.boxShadow = '';
-      item.style.zIndex = '';
-      var t = e.changedTouches[0];
-      var targetIdx = null;
-      document.querySelectorAll('#tab-sort-list > div').forEach(function(el, idx2) {
-        el.style.borderTop = '';
+
+    item.addEventListener('touchmove', function(e) {
+      var dy = Math.abs(e.touches[0].clientY - touchStartY);
+      var dx = Math.abs(e.touches[0].clientX - touchStartX);
+      if(!isDragging && dy < 8 && dx < 8) return;
+      if(!isDragging && dx > dy) return; // 가로 스크롤이면 무시
+
+      isDragging = true;
+      e.preventDefault(); // 세로 드래그일 때만 스크롤 막기
+
+      var t = e.touches[0];
+      // 고스트 생성
+      if(!ghost) {
+        ghost = item.cloneNode(true);
+        ghost.style.cssText += ';position:fixed;z-index:9999;pointer-events:none;opacity:0.85;box-shadow:0 4px 16px rgba(0,0,0,0.2);width:'+item.offsetWidth+'px;left:'+item.getBoundingClientRect().left+'px;';
+        document.body.appendChild(ghost);
+        item.style.opacity = '0.3';
+      }
+      ghost.style.top = (t.clientY - 25) + 'px';
+
+      // 타겟 하이라이트
+      list.querySelectorAll('[data-idx]').forEach(function(el) {
         var r = el.getBoundingClientRect();
-        if(t.clientY >= r.top && t.clientY <= r.bottom) targetIdx = idx2;
+        el.style.borderColor = (t.clientY >= r.top && t.clientY <= r.bottom && el !== item) ? 'var(--green)' : 'transparent';
       });
-      if(targetIdx !== null && targetIdx !== touchFromIdx) {
-        var moved = tabOrder.splice(touchFromIdx, 1)[0];
-        tabOrder.splice(targetIdx, 0, moved);
+    }, {passive:false});
+
+    item.addEventListener('touchend', function(e) {
+      if(ghost) { document.body.removeChild(ghost); ghost=null; }
+      item.style.opacity = hiddenTabs.includes(item.dataset.id) ? '0.4' : '1';
+      list.querySelectorAll('[data-idx]').forEach(function(el){ el.style.borderColor='transparent'; });
+      if(!isDragging) return;
+
+      var t = e.changedTouches[0];
+      var toIdx = parseInt(item.dataset.idx);
+      list.querySelectorAll('[data-idx]').forEach(function(el) {
+        var r = el.getBoundingClientRect();
+        if(t.clientY >= r.top && t.clientY <= r.bottom && el !== item) {
+          toIdx = parseInt(el.dataset.idx);
+        }
+      });
+      var fromIdx = parseInt(item.dataset.idx);
+      if(fromIdx !== toIdx) {
+        var moved = tabOrder.splice(fromIdx,1)[0];
+        tabOrder.splice(toIdx,0,moved);
         renderTabSortList();
       }
     }, {passive:true});
-    item.addEventListener('touchmove', function(e) {
-      var t = e.touches[0];
-      document.querySelectorAll('#tab-sort-list > div').forEach(function(el) {
-        var r = el.getBoundingClientRect();
-        el.style.borderTop = (t.clientY >= r.top && t.clientY <= r.bottom) ? '2px solid var(--green)' : '';
-      });
-    }, {passive:true});
-
-    list.appendChild(item);
   });
 }
-
-// ── 설정 저장/로드 함수들 ──
-
-window.saveFinanceSettings = function() {
-  var income = getVal('set-income');
-  var fixed = getVal('set-fixed');
-  var pocket = getVal('set-pocket');
-  localStorage.setItem('financeSettings', JSON.stringify({income, fixed, pocket}));
-  // 수지 페이지 수입 필드에도 반영
-  var cfEl = document.getElementById('cf-income');
-  if(cfEl && income) { cfEl.value = income.toLocaleString(); renderCashflow(); }
-  var msg = document.getElementById('set-finance-msg');
-  msg.style.display = 'block';
-  setTimeout(function(){ msg.style.display='none'; }, 2000);
-};
-
-window.saveWeddingDate = function() {
-  var date = document.getElementById('set-wedding-date').value;
-  if(!date) return;
-  localStorage.setItem('weddingDate', date);
-  // 결혼 트래커에도 반영
-  var wdEl = document.getElementById('wd-date');
-  if(wdEl) wdEl.value = date;
-  var msg = document.getElementById('set-wedding-msg');
-  msg.style.display = 'block';
-  setTimeout(function(){ msg.style.display='none'; }, 2000);
-};
-
-window.toggleDarkMode = function(on) {
-  localStorage.setItem('darkMode', on ? '1' : '0');
-  applyDarkMode(on);
-  var knob = document.getElementById('darkmode-knob');
-  var slider = document.getElementById('darkmode-slider');
-  if(on) { knob.style.transform='translateX(20px)'; slider.style.background='var(--green)'; }
-  else   { knob.style.transform='translateX(0)'; slider.style.background='var(--border)'; }
-};
-
-function applyDarkMode(on) {
-  document.documentElement.style.setProperty('--bg', on ? '#1a1a1a' : '#f5f4ef');
-  document.documentElement.style.setProperty('--surface', on ? '#262626' : '#ffffff');
-  document.documentElement.style.setProperty('--surface2', on ? '#323232' : '#f0efe9');
-  document.documentElement.style.setProperty('--text', on ? '#f0f0f0' : '#1a1916');
-  document.documentElement.style.setProperty('--text2', on ? '#a0a0a0' : '#6b6960');
-  document.documentElement.style.setProperty('--text3', on ? '#666' : '#9e9d97');
-  document.documentElement.style.setProperty('--border', on ? '#3a3a3a' : '#e5e4de');
-}
-
-window.saveSoundPref = function(on) {
-  localStorage.setItem('soundPref', on ? '1' : '0');
-  var knob = document.getElementById('sound-knob');
-  var slider = document.getElementById('sound-slider');
-  if(on) { knob.style.transform='translateX(20px)'; slider.style.background='var(--green)'; }
-  else   { knob.style.transform='translateX(0)'; slider.style.background='var(--border)'; }
-};
-
-function playBeep() {
-  if(localStorage.getItem('soundPref') !== '1') return;
-  try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var o = ctx.createOscillator();
-    var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.value = 880; g.gain.setValueAtTime(0.1, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    o.start(); o.stop(ctx.currentTime + 0.3);
-  } catch(e){}
-}
-
-window.resetAppSettings = function() {
-  if(!confirm('앱 설정을 모두 초기화할까요? (Firebase 데이터는 유지돼요)')) return;
-  ['tabOrder','financeSettings','weddingDate','darkMode','soundPref'].forEach(function(k){ localStorage.removeItem(k); });
-  location.reload();
-};
-
-function loadSettings() {
-  // 급여일 로드
-  cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
-  // 예산/순자산 스냅 로드
-  budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
-  networthSnaps = JSON.parse(localStorage.getItem('networthSnaps') || '[]');
-  // 고정지출 항목 로드
-  fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
-  // 홈 카드 순서 로드
-  homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(c=>c.id);
-  // 숨김 탭 로드
-  hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
-  // tabOrder 로드
-  tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(t=>t.id);
-  // 재무 설정
-  var fs = JSON.parse(localStorage.getItem('financeSettings') || 'null');
-  if(fs) {
-    if(fs.income) { document.getElementById('set-income').value = fs.income.toLocaleString(); }
-    if(fs.fixed)  { document.getElementById('set-fixed').value  = fs.fixed.toLocaleString(); }
-    if(fs.pocket) { document.getElementById('set-pocket').value = fs.pocket.toLocaleString(); }
-    var cfEl = document.getElementById('cf-income');
-    if(cfEl && fs.income) cfEl.value = fs.income.toLocaleString();
-  }
-  // 결혼 예정일
-  var wd = localStorage.getItem('weddingDate') || '2027-09-04';
-  document.getElementById('set-wedding-date').value = wd;
-  document.getElementById('wd-date').value = wd;
-  // 결혼 목표/저축 기본값도 localStorage 우선
-  var wdGoal = localStorage.getItem('wdGoal');
-  var wdSaved = localStorage.getItem('wdSaved');
-  var wdMonthly = localStorage.getItem('wdMonthly');
-  if(wdGoal) document.getElementById('wd-goal').value = parseInt(wdGoal).toLocaleString();
-  if(wdSaved) document.getElementById('wd-saved').value = parseInt(wdSaved).toLocaleString();
-  if(wdMonthly) document.getElementById('wd-monthly').value = parseInt(wdMonthly).toLocaleString();
-  // 다크모드
-  var dm = localStorage.getItem('darkMode') === '1';
-  if(dm) {
-    applyDarkMode(true);
-    document.getElementById('set-darkmode').checked = true;
-    document.getElementById('darkmode-knob').style.transform = 'translateX(20px)';
-    document.getElementById('darkmode-slider').style.background = 'var(--green)';
-  }
-  // 알림음
-  var snd = localStorage.getItem('soundPref') === '1';
-  if(snd) {
-    document.getElementById('set-sound').checked = true;
-    document.getElementById('sound-knob').style.transform = 'translateX(20px)';
-    document.getElementById('sound-slider').style.background = 'var(--green)';
-  }
-}
-
 window.saveTabOrder = function() {
   localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
   localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
