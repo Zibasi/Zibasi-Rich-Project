@@ -137,6 +137,35 @@
   /* 지출 차트 */
   .mini-chart-wrap { margin-top: 4px; }
   .mini-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  /* 예산 */
+  .budget-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .budget-item:last-child { border-bottom: none; }
+  .budget-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+  .budget-pct { font-size: 11px; color: var(--text3); }
+  .budget-bar-track { height: 6px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .budget-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  /* 리포트 */
+  .report-section { margin-bottom: 16px; }
+  .report-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .report-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .report-compare-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .report-compare-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .report-compare-val { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* 순자산 추이 */
+  .networth-snap { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .networth-snap:last-child { border-bottom: none; }
+  .networth-snap-date { font-size: 12px; color: var(--text2); }
+  .networth-snap-val { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .networth-snap-change { font-size: 11px; margin-top: 2px; text-align: right; }
+
+  /* 로드맵 */
+  .roadmap-phase { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .roadmap-phase:last-child { border-bottom: none; }
+  .roadmap-phase-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .roadmap-phase-sub { font-size: 12px; color: var(--text2); }
+
   /* 홈 카드 순서 */
   .home-sort-item { display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;cursor:grab;user-select:none;border:1.5px solid transparent;transition:border-color 0.15s; }
 
@@ -291,19 +320,19 @@
       <div id="home-ex-row" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
           <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:11px;color:var(--text3)">🇺🇸 USD</span>
-            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-usd">-</span>
+            <span style="font-size:13px;font-weight:600;font-family:monospace" id="home-ex-usd">-</span>
           </div>
           <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:11px;color:var(--text3)">🇯🇵 JPY</span>
-            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-jpy">-</span>
+            <span style="font-size:13px;font-weight:600;font-family:monospace" id="home-ex-jpy">-</span>
           </div>
           <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:11px;color:var(--text3)">🇪🇺 EUR</span>
-            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-eur">-</span>
+            <span style="font-size:13px;font-weight:600;font-family:monospace" id="home-ex-eur">-</span>
           </div>
           <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:11px;color:var(--text3)">🇨🇳 CNY</span>
-            <span style="font-size:13px;font-weight:600;font-family:'DM Mono',monospace" id="home-ex-cny">-</span>
+            <span style="font-size:13px;font-weight:600;font-family:monospace" id="home-ex-cny">-</span>
           </div>
         </div>
         <div class="stat-grid" id="home-stats-grid" style="grid-template-columns:1fr 1fr">
@@ -333,18 +362,18 @@
         </div>
       <div class="card" id="home-invest-goal-card">
         <div class="card-label">이달 투자 목표</div>
-        <div style="font-size:22px;font-weight:600;font-family:'DM Mono',monospace" id="home-prog-val">0 / 50만원</div>
+        <div style="font-size:22px;font-weight:600;font-family:monospace" id="home-prog-val">0 / 50만원</div>
         <div class="prog-wrap"><div class="prog-track"><div class="prog-fill" id="home-prog-bar" style="width:0%"></div></div></div>
       </div>
       <div class="card">
         <div class="card-label">ETF 현황 (예시)</div>
         <div class="etf-row">
           <div><div class="etf-name">TIGER 미국S&P500</div><div class="etf-sub">월 30만원 적립</div></div>
-          <div style="text-align:right"><div style="font-size:14px;font-weight:600;font-family:'DM Mono',monospace" class="pos">+4.2%</div><div style="font-size:11px" class="pos">+126,000원</div></div>
+          <div style="text-align:right"><div style="font-size:14px;font-weight:600;font-family:monospace" class="pos">+4.2%</div><div style="font-size:11px" class="pos">+126,000원</div></div>
         </div>
         <div class="etf-row">
           <div><div class="etf-name">TIGER 나스닥100</div><div class="etf-sub">월 10만원 적립</div></div>
-          <div style="text-align:right"><div style="font-size:14px;font-weight:600;font-family:'DM Mono',monospace" class="pos">+6.8%</div><div style="font-size:11px" class="pos">+68,000원</div></div>
+          <div style="text-align:right"><div style="font-size:14px;font-weight:600;font-family:monospace" class="pos">+6.8%</div><div style="font-size:11px" class="pos">+68,000원</div></div>
         </div>
       </div>
       <div class="card" id="home-recent-card">
@@ -437,9 +466,19 @@
     <!-- 월별 수지 페이지 -->
     <div class="page" id="page-cashflow">
       <div class="card">
-        <div class="card-label">월 수입 설정</div>
+        <div class="card-label">수지 설정</div>
         <div class="form-row"><label>월 수입 (원)</label><input type="text" inputmode="numeric" id="cf-income" placeholder="2,200,000" value="2,200,000" oninput="formatComma(this);renderCashflow()" /></div>
-        <div style="font-size:12px;color:var(--text3)">지출은 가계부에서 자동으로 가져와요</div>
+        <div class="form-row">
+          <label>급여일</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:13px;color:var(--text2)">매월</span>
+            <select id="cf-payday" onchange="savePayday();renderCashflow()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit">
+<option value="1">1일</option><option value="2">2일</option><option value="3">3일</option><option value="4">4일</option><option value="5">5일</option><option value="6">6일</option><option value="7">7일</option><option value="8">8일</option><option value="9">9일</option><option value="10">10일</option><option value="11">11일</option><option value="12">12일</option><option value="13">13일</option><option value="14">14일</option><option value="15">15일</option><option value="16">16일</option><option value="17">17일</option><option value="18">18일</option><option value="19">19일</option><option value="20">20일</option><option value="21">21일</option><option value="22">22일</option><option value="23">23일</option><option value="24">24일</option><option value="25">25일</option><option value="26">26일</option><option value="27">27일</option><option value="28">28일</option>
+            </select>
+            <span style="font-size:13px;color:var(--text2)">부터 다음 급여일 전날까지</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px" id="cf-period-label"></div>
       </div>
       <div class="card">
         <div class="card-label">이번 달 수지</div>
@@ -529,7 +568,7 @@
         </div>
         <div id="spend-total-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
           <span style="font-size:13px;color:var(--text2)">합계 <span id="spend-filter-label" style="color:var(--green);font-weight:600"></span></span>
-          <span style="font-size:18px;font-weight:600;font-family:'DM Mono',monospace" id="spend-total">0원</span>
+          <span style="font-size:18px;font-weight:600;font-family:monospace" id="spend-total">0원</span>
         </div>
         <div id="spend-list"><div class="loading">불러오는 중...</div></div>
       </div>
@@ -730,6 +769,81 @@
 
     </div>
 
+    <!-- 예산 관리 페이지 -->
+    <div class="page" id="page-budget">
+      <div class="card">
+        <div class="card-label">카테고리별 예산 설정</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">이번 달 카테고리별 지출 한도를 설정해요</div>
+        <div id="budget-list"></div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="display:flex;gap:8px">
+            <select id="budget-cat" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit">
+              <option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>공과금</option><option>문화/여가</option><option>기타</option>
+            </select>
+            <input type="text" inputmode="numeric" id="budget-amt" placeholder="예산 금액" oninput="formatComma(this)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:monospace" />
+            <button onclick="addBudget()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit">설정</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">이번 달 예산 현황</div>
+        <div id="budget-status"><div class="empty">예산을 설정해보세요</div></div>
+      </div>
+    </div>
+
+    <!-- 소비 리포트 페이지 -->
+    <div class="page" id="page-report">
+      <div class="card">
+        <div class="card-label">월별 소비 리포트</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+          <button onclick="reportMonthShift(-1)" style="background:none;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit">◀</button>
+          <span id="report-month-label" style="flex:1;text-align:center;font-size:15px;font-weight:600"></span>
+          <button onclick="reportMonthShift(1)" style="background:none;border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit">▶</button>
+        </div>
+        <div id="report-content"></div>
+      </div>
+    </div>
+
+    <!-- 순자산 추이 페이지 -->
+    <div class="page" id="page-networth">
+      <div class="card">
+        <div class="card-label">순자산 스냅샷 기록</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">현재 순자산을 기록해두면 월별 변화를 추적할 수 있어요</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:4px">현재 순자산</div>
+            <div style="font-size:20px;font-weight:600;font-family:monospace;color:var(--green)" id="nw-current-val">계산중...</div>
+          </div>
+          <button onclick="saveNetworthSnap()" class="btn btn-primary" style="padding:10px 18px">이달 기록</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">자산탭 합계 - 대출탭 합계 기준으로 자동 계산돼요</div>
+      </div>
+      <div class="card">
+        <div class="card-label">순자산 변화 추이</div>
+        <div id="networth-trend-chart" style="margin-bottom:14px"></div>
+        <div id="networth-snap-list"><div class="empty">아직 기록이 없어요</div></div>
+      </div>
+    </div>
+
+    <!-- 20억 로드맵 페이지 -->
+    <div class="page" id="page-roadmap">
+      <div class="card">
+        <div class="card-label">목표 자산 로드맵</div>
+        <div class="form-row"><label>최종 목표 (원)</label><input type="text" inputmode="numeric" id="rm-goal" placeholder="2,000,000,000" value="2,000,000,000" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>현재 순자산 (원)</label><input type="text" inputmode="numeric" id="rm-current" placeholder="0" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>현재 월 저축액 (원)</label><input type="text" inputmode="numeric" id="rm-monthly" placeholder="700,000" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>결혼 후 월 저축 (원)</label><input type="text" inputmode="numeric" id="rm-monthly2" placeholder="3,000,000" oninput="formatComma(this)" /></div>
+        <div class="form-row"><label>결혼 예정일</label><input type="date" id="rm-wedding" value="2027-09-04" /></div>
+        <div class="form-row"><label>연 투자 수익률 (%)</label><input type="number" id="rm-rate" placeholder="5" step="0.1" value="5" /></div>
+        <button class="btn btn-primary" onclick="calcRoadmap()">로드맵 계산</button>
+      </div>
+      <div class="card" id="roadmap-result" style="display:none">
+        <div class="card-label">예상 로드맵</div>
+        <div id="roadmap-summary" style="margin-bottom:16px"></div>
+        <div id="roadmap-phases"></div>
+      </div>
+    </div>
+
     <div class="page" id="page-settings">
 
       <!-- 기본 재무 정보 -->
@@ -750,12 +864,12 @@
         <div id="fixed-expense-list" style="margin-bottom:12px"></div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <input type="text" id="fe-name" placeholder="항목명 (예: 월세)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit" />
-          <input type="text" inputmode="numeric" id="fe-amt" placeholder="금액" oninput="formatComma(this)" style="width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:'DM Mono',monospace" />
+          <input type="text" inputmode="numeric" id="fe-amt" placeholder="금액" oninput="formatComma(this)" style="width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:monospace" />
           <button onclick="addFixedExpense()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">추가</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
           <span style="font-size:13px;font-weight:600">월 고정지출 합계</span>
-          <span style="font-size:15px;font-weight:600;color:var(--red);font-family:'DM Mono',monospace" id="fe-total">0원</span>
+          <span style="font-size:15px;font-weight:600;color:var(--red);font-family:monospace" id="fe-total">0원</span>
         </div>
       </div>
 
@@ -839,6 +953,10 @@
     <button class="nav-btn" data-page="loan" onclick="goPage('loan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>대출</button>
     <button class="nav-btn" data-page="assets" onclick="goPage('assets',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/></svg>자산</button>
     <button class="nav-btn" data-page="memo" onclick="goPage('memo',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>메모</button>
+    <button class="nav-btn" data-page="budget" onclick="goPage('budget',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>예산</button>
+    <button class="nav-btn" data-page="report" onclick="goPage('report',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>리포트</button>
+    <button class="nav-btn" data-page="networth" onclick="goPage('networth',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>순자산</button>
+    <button class="nav-btn" data-page="roadmap" onclick="goPage('roadmap',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M3 6h18M3 18h18"/><path d="M17 6l4 6-4 6"/></svg>로드맵</button>
     <button class="nav-btn" data-page="settings" onclick="goPage('settings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>설정</button>
   </nav>
 </div>
@@ -1717,6 +1835,10 @@ var DEFAULT_TABS = [
   {id:'exchange', label:'환율', svg:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'loan', label:'대출', svg:'<path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/>'},
   {id:'assets', label:'자산', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/>'},
+  {id:'budget', label:'예산', svg:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
+  {id:'report', label:'리포트', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'},
+  {id:'networth', label:'순자산', svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'roadmap', label:'로드맵', svg:'<path d="M3 12h18M3 6h18M3 18h18"/>'},
   {id:'memo', label:'메모', svg:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'}
 ];
 var tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(t=>t.id);
@@ -1901,6 +2023,11 @@ window.resetAppSettings = function() {
 };
 
 function loadSettings() {
+  // 급여일 로드
+  cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
+  // 예산/순자산 스냅 로드
+  budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
+  networthSnaps = JSON.parse(localStorage.getItem('networthSnaps') || '[]');
   // 고정지출 항목 로드
   fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
   // 홈 카드 순서 로드
@@ -2061,6 +2188,10 @@ window.goPage = (id,btn) => {
   if(id==='assets') renderAssets();
   if(id==='loan') renderLoans();
   if(id==='exchange') fetchExchangeRates();
+  if(id==='budget') { renderBudgetList(); renderBudgetStatus(); }
+  if(id==='report') renderReport();
+  if(id==='networth') renderNetworth();
+  if(id==='roadmap') prefillRoadmap();
 };
 
 // ── 결혼자금 트래커 ──
@@ -2138,45 +2269,344 @@ window.calcPension = () => {
 };
 
 // ── 월별 수지 ──
-let cfCurrentMonth = new Date().toISOString().slice(0,7);
-window.cfMonthShift = (dir) => {
-  const [y,m] = cfCurrentMonth.split('-').map(Number);
-  const d = new Date(y, m-1+dir, 1);
-  cfCurrentMonth = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 1. 카테고리별 예산
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
+
+window.addBudget = function() {
+  var cat = document.getElementById('budget-cat').value;
+  var amt = parseInt((document.getElementById('budget-amt').value||'0').replace(/[^0-9]/g,''))||0;
+  if(!amt) return alert('금액을 입력해주세요.');
+  budgets[cat] = amt;
+  localStorage.setItem('budgets', JSON.stringify(budgets));
+  document.getElementById('budget-amt').value = '';
+  renderBudgetList();
+  renderBudgetStatus();
+};
+
+function renderBudgetList() {
+  var el = document.getElementById('budget-list');
+  if(!el) return;
+  if(!Object.keys(budgets).length) { el.innerHTML = ''; return; }
+  el.innerHTML = '';
+  Object.entries(budgets).forEach(function(entry) {
+    var cat = entry[0], amt = entry[1];
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML = '<span style="font-size:13px">'+cat+'</span><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;font-weight:600">'+fmt(amt)+'</span></div>';
+    var delBtn = document.createElement('button');
+    delBtn.textContent = '×'; delBtn.style.cssText = 'background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer';
+    delBtn.addEventListener('click', function() { delete budgets[cat]; localStorage.setItem('budgets',JSON.stringify(budgets)); renderBudgetList(); renderBudgetStatus(); });
+    row.querySelector('div').appendChild(delBtn);
+    el.appendChild(row);
+  });
+}
+
+function renderBudgetStatus() {
+  var el = document.getElementById('budget-status');
+  if(!el) return;
+  var tm = thisMonth();
+  var catSpend = {};
+  spends.filter(s=>s.date.slice(0,7)===tm).forEach(function(s){ catSpend[s.cat]=(catSpend[s.cat]||0)+s.amt; });
+  if(!Object.keys(budgets).length) { el.innerHTML='<div class="empty">예산을 설정해보세요</div>'; return; }
+  el.innerHTML = '';
+  Object.entries(budgets).forEach(function(entry) {
+    var cat=entry[0], budget=entry[1];
+    var spent = catSpend[cat]||0;
+    var pct = Math.min(100, Math.round(spent/budget*100));
+    var color = pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+    var item = document.createElement('div'); item.className='budget-item';
+    item.innerHTML = '<div class="budget-top"><span>'+cat+'</span><span><span style="color:'+color+';font-weight:600">'+fmt(spent)+'</span> / '+fmt(budget)+'</span></div><div class="budget-pct">'+pct+'% 사용'+( pct>=100?' ⚠ 초과!':pct>=80?' 주의':'')+'</div><div class="budget-bar-track" style="margin-top:5px"><div class="budget-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+    el.appendChild(item);
+  });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 2. 소비 리포트
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var reportCurrentMonth = new Date().toISOString().slice(0,7);
+
+window.reportMonthShift = function(dir) {
+  var parts = reportCurrentMonth.split('-').map(Number);
+  var d = new Date(parts[0], parts[1]-1+dir, 1);
+  reportCurrentMonth = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  renderReport();
+};
+
+function renderReport() {
+  var el = document.getElementById('report-content');
+  var lbl = document.getElementById('report-month-label');
+  if(!el||!lbl) return;
+  var parts = reportCurrentMonth.split('-').map(Number);
+  lbl.textContent = parts[0]+'년 '+parts[1]+'월';
+
+  // 이번달 vs 지난달
+  var prevD = new Date(parts[0], parts[1]-2, 1);
+  var prevMonth = prevD.getFullYear()+'-'+String(prevD.getMonth()+1).padStart(2,'0');
+  var thisList = spends.filter(s=>s.date.slice(0,7)===reportCurrentMonth);
+  var prevList = spends.filter(s=>s.date.slice(0,7)===prevMonth);
+  var thisTotal = thisList.reduce((s,x)=>s+x.amt,0);
+  var prevTotal = prevList.reduce((s,x)=>s+x.amt,0);
+  var diff = thisTotal - prevTotal;
+
+  // 카테고리별 합계
+  var catTotals = {};
+  thisList.forEach(function(s){ catTotals[s.cat]=(catTotals[s.cat]||0)+s.amt; });
+  var sorted = Object.entries(catTotals).sort(function(a,b){return b[1]-a[1];});
+
+  var html = '<div class="report-section"><div class="report-title">총 지출</div><div class="report-compare"><div class="report-compare-box"><div class="report-compare-label">이번 달</div><div class="report-compare-val" style="color:var(--red)">'+fmt(thisTotal)+'</div></div><div class="report-compare-box"><div class="report-compare-label">전달 대비</div><div class="report-compare-val" style="color:'+(diff<=0?'var(--green)':'var(--red)')+'">'+(diff>0?'+':'')+fmt(Math.abs(diff))+'</div></div></div></div>';
+
+  if(sorted.length) {
+    html += '<div class="report-section"><div class="report-title">카테고리별</div>';
+    sorted.forEach(function(entry) {
+      var cat=entry[0], amt=entry[1];
+      var pct = thisTotal>0?Math.round(amt/thisTotal*100):0;
+      html += '<div class="mini-bar-row"><span class="mini-bar-label">'+cat+'</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:'+pct+'%;background:var(--blue)"></div></div><span class="mini-bar-amt">'+pct+'%</span></div>';
+    });
+    html += '</div>';
+    html += '<div class="report-section"><div class="report-title">가장 많이 쓴 항목</div><div class="report-compare-box" style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px"><div style="font-size:13px;font-weight:600">'+sorted[0][0]+'</div><div style="font-size:20px;font-weight:600;font-family:monospace;color:var(--red);margin-top:4px">'+fmt(sorted[0][1])+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">전체 지출의 '+Math.round(sorted[0][1]/thisTotal*100)+'%</div></div></div>';
+  }
+
+  // 저축률
+  var fs3 = JSON.parse(localStorage.getItem('financeSettings')||'null');
+  var income3 = fs3&&fs3.income ? fs3.income : 0;
+  if(income3>0) {
+    var saveRate = Math.max(0,Math.round((income3-thisTotal)/income3*100));
+    html += '<div class="report-section"><div class="report-title">저축률</div><div style="text-align:center;padding:14px 0"><div style="font-size:32px;font-weight:600;font-family:monospace;color:'+(saveRate>=30?'var(--green)':saveRate>=20?'var(--amber)':'var(--red)')+'">'+saveRate+'%</div><div style="font-size:12px;color:var(--text3);margin-top:4px">'+(saveRate>=30?'훌륭해요! 🎉':saveRate>=20?'양호해요 👍':'조금 더 절약해봐요')+'</div></div></div>';
+  }
+
+  el.innerHTML = html || '<div class="empty">이달 지출 기록이 없어요</div>';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 3. 순자산 추이
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var networthSnaps = JSON.parse(localStorage.getItem('networthSnaps') || '[]');
+
+window.saveNetworthSnap = function() {
+  var totalAssets = assets.reduce((s,a)=>s+a.amt,0);
+  var totalLoans  = loans.reduce((s,l)=>s+l.balance,0);
+  var net = totalAssets - totalLoans;
+  var today = new Date().toISOString().slice(0,10);
+  // 같은 달 이미 있으면 업데이트
+  var month = today.slice(0,7);
+  var idx = networthSnaps.findIndex(function(s){return s.date.slice(0,7)===month;});
+  if(idx>-1) networthSnaps[idx] = {date:today, net:net, assets:totalAssets, loans:totalLoans};
+  else networthSnaps.push({date:today, net:net, assets:totalAssets, loans:totalLoans});
+  networthSnaps.sort(function(a,b){return a.date.localeCompare(b.date);});
+  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps));
+  alert('이달 순자산이 기록됐어요! ✓');
+  renderNetworth();
+};
+
+window.delNetworthSnap = function(idx) {
+  networthSnaps.splice(idx,1);
+  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps));
+  renderNetworth();
+};
+
+function renderNetworth() {
+  var totalAssets = assets.reduce((s,a)=>s+a.amt,0);
+  var totalLoans  = loans.reduce((s,l)=>s+l.balance,0);
+  var curNet = totalAssets - totalLoans;
+  var curEl = document.getElementById('nw-current-val');
+  if(curEl) { curEl.textContent=fmt(curNet); curEl.style.color=curNet>=0?'var(--green)':'var(--red)'; }
+
+  var listEl = document.getElementById('networth-snap-list');
+  var chartEl = document.getElementById('networth-trend-chart');
+  if(!listEl) return;
+
+  if(!networthSnaps.length) {
+    listEl.innerHTML='<div class="empty">아직 기록이 없어요<br><small style="color:var(--text3)">이달 기록 버튼을 눌러보세요</small></div>';
+    if(chartEl) chartEl.innerHTML=''; return;
+  }
+
+  // 차트
+  if(chartEl && networthSnaps.length>1) {
+    var maxNet = Math.max(...networthSnaps.map(s=>s.net),1);
+    var minNet = Math.min(...networthSnaps.map(s=>s.net),0);
+    var range = maxNet - minNet || 1;
+    chartEl.innerHTML = networthSnaps.slice(-6).map(function(s,i,arr){
+      var pct = Math.round((s.net-minNet)/range*100);
+      return '<div class="mini-bar-row"><span style="font-size:11px;color:var(--text2);min-width:44px">'+s.date.slice(0,7).replace('-','/')+'</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:'+pct+'%;background:var(--green)"></div></div><span style="font-size:12px;font-family:monospace;min-width:70px;text-align:right;color:'+(s.net>=0?'var(--green)':'var(--red)')+'">'+fmt(s.net)+'</span></div>';
+    }).join('');
+  }
+
+  // 목록
+  var reversed = networthSnaps.slice().reverse();
+  listEl.innerHTML = '';
+  reversed.forEach(function(s, i) {
+    var realIdx = networthSnaps.length-1-i;
+    var prev = realIdx>0 ? networthSnaps[realIdx-1].net : null;
+    var change = prev!==null ? s.net-prev : null;
+    var item = document.createElement('div'); item.className='networth-snap';
+    var changeHtml = change!==null ? '<div class="networth-snap-change" style="color:'+(change>=0?'var(--green)':'var(--red)')+'">'+(change>=0?'▲':'▼')+fmt(Math.abs(change))+'</div>' : '';
+    item.innerHTML='<div><div class="networth-snap-date">'+s.date+'</div><div style="font-size:11px;color:var(--text3)">자산 '+fmt(s.assets)+' · 대출 '+fmt(s.loans)+'</div></div><div style="text-align:right"><div class="networth-snap-val" style="color:'+(s.net>=0?'var(--green)':'var(--red)')+'">'+fmt(s.net)+'</div>'+changeHtml+'</div>';
+    var del=document.createElement('button'); del.textContent='×'; del.style.cssText='background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;margin-left:8px';
+    del.addEventListener('click',function(){window.delNetworthSnap(realIdx);});
+    item.appendChild(del);
+    listEl.appendChild(item);
+  });
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 4. 목표 자산 로드맵
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function prefillRoadmap() {
+  var fs4 = JSON.parse(localStorage.getItem('financeSettings')||'null');
+  var feItems4 = JSON.parse(localStorage.getItem('fixedExpenses')||'[]');
+  var fixedAmt = feItems4.reduce(function(s,f){return s+f.amt;},0);
+  var income4 = fs4&&fs4.income?fs4.income:2200000;
+  var pocket4 = fs4&&fs4.pocket?fs4.pocket:300000;
+  var savingNow = Math.max(0, income4 - fixedAmt - pocket4);
+  var totalAssets4 = assets.reduce(function(s,a){return s+a.amt;},0);
+  var totalLoans4  = loans.reduce(function(s,l){return s+l.balance;},0);
+  var curNet4 = totalAssets4 - totalLoans4;
+  var rmCur = document.getElementById('rm-current');
+  var rmMon = document.getElementById('rm-monthly');
+  var rmWed = document.getElementById('rm-wedding');
+  if(rmCur && !rmCur.value) rmCur.value = curNet4.toLocaleString();
+  if(rmMon && !rmMon.value) rmMon.value = savingNow.toLocaleString();
+  var wd = localStorage.getItem('weddingDate') || '2027-09-04';
+  if(rmWed) rmWed.value = wd;
+}
+
+window.calcRoadmap = function() {
+  var goal    = parseInt((document.getElementById('rm-goal').value||'0').replace(/[^0-9]/g,''))||2000000000;
+  var current = parseInt((document.getElementById('rm-current').value||'0').replace(/[^0-9]/g,''))||0;
+  var monthly1= parseInt((document.getElementById('rm-monthly').value||'0').replace(/[^0-9]/g,''))||700000;
+  var monthly2= parseInt((document.getElementById('rm-monthly2').value||'0').replace(/[^0-9]/g,''))||3000000;
+  var weddingDate = document.getElementById('rm-wedding').value || '2027-09-04';
+  var rate = parseFloat(document.getElementById('rm-rate').value)||5;
+  var monthRate = rate/100/12;
+
+  var today = new Date();
+  var wedding = new Date(weddingDate);
+  var monthsToWedding = Math.max(0, (wedding.getFullYear()-today.getFullYear())*12 + (wedding.getMonth()-today.getMonth()));
+
+  // 시뮬레이션
+  var bal = current;
+  var month = 0;
+  var phases = [];
+  var phase1End = null, phase2End = null;
+
+  // 결혼 전
+  for(var i=0;i<monthsToWedding && bal<goal;i++) {
+    bal = bal*(1+monthRate) + monthly1;
+    month++;
+  }
+  phase1End = {months: month, bal: bal};
+
+  // 결혼 후
+  while(bal < goal && month < 600) {
+    bal = bal*(1+monthRate) + monthly2;
+    month++;
+  }
+  phase2End = {months: month, bal: bal};
+
+  var achieveDate = new Date(today.getFullYear(), today.getMonth()+month, 1);
+  var years = Math.floor(month/12);
+  var months = month%12;
+
+  // 요약
+  var sumEl = document.getElementById('roadmap-summary');
+  sumEl.innerHTML = '<div style="text-align:center;padding:8px 0 16px"><div style="font-size:13px;color:var(--text2);margin-bottom:4px">20억 달성 예상</div><div style="font-size:28px;font-weight:600;color:var(--green)">'+achieveDate.getFullYear()+'년 '+( achieveDate.getMonth()+1)+'월</div><div style="font-size:13px;color:var(--text2);margin-top:4px">지금부터 약 '+years+'년 '+months+'개월</div></div>';
+
+  // 단계별
+  var phasesEl = document.getElementById('roadmap-phases');
+  var weddingBal = phase1End.bal;
+  phasesEl.innerHTML = '<div class="roadmap-phase"><div class="roadmap-phase-header"><span>📅 지금 ~ 결혼 전 ('+monthsToWedding+'개월)</span><span style="color:var(--green)">'+fmt(Math.round(weddingBal))+'</span></div><div class="roadmap-phase-sub">월 '+fmt(monthly1)+' 저축 · 연 '+rate+'% 수익률</div></div><div class="roadmap-phase"><div class="roadmap-phase-header"><span>💍 결혼 후 ~ 목표 달성</span><span style="color:var(--green)">'+fmt(goal)+'</span></div><div class="roadmap-phase-sub">월 '+fmt(monthly2)+' 저축 · 연 '+rate+'% 수익률<br>맞벌이 효과: 월 '+ fmt(monthly2-monthly1)+' 추가 저축</div></div>';
+
+  // 중간 이정표
+  var milestones = [100000000, 500000000, 1000000000, 2000000000];
+  var msHtml = '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)"><div class="report-title">이정표</div>';
+  milestones.forEach(function(ms) {
+    if(ms > goal) return;
+    var bal2 = current; var m2 = 0;
+    while(bal2<ms && m2<600) { bal2=bal2*(1+monthRate)+(m2<monthsToWedding?monthly1:monthly2); m2++; }
+    var y2=Math.floor(m2/12), mo2=m2%12;
+    msHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)"><span>'+fmt(ms)+'</span><span style="color:var(--green)">'+y2+'년 '+mo2+'개월 후</span></div>';
+  });
+  msHtml += '</div>';
+  phasesEl.innerHTML += msHtml;
+
+  document.getElementById('roadmap-result').style.display='block';
+};
+
+// 급여일 기준 수지
+var cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
+var cfPeriodOffset = 0; // 기간 이동 (0=현재)
+
+window.savePayday = function() {
+  cfPayday = parseInt(document.getElementById('cf-payday').value);
+  localStorage.setItem('cfPayday', cfPayday);
+  cfPeriodOffset = 0;
   renderCashflow();
 };
+
+// 급여일 기준 기간 계산
+function getPayPeriod(offset) {
+  var today = new Date();
+  var payday = cfPayday;
+  // 현재 기간 시작일 계산
+  var start = new Date(today.getFullYear(), today.getMonth(), payday);
+  if(today.getDate() < payday) {
+    start = new Date(today.getFullYear(), today.getMonth()-1, payday);
+  }
+  // offset 적용
+  start = new Date(start.getFullYear(), start.getMonth() + offset, payday);
+  var end = new Date(start.getFullYear(), start.getMonth()+1, payday-1);
+  return {start, end};
+}
+
+function dateInPeriod(dateStr, start, end) {
+  var d = new Date(dateStr);
+  return d >= start && d <= end;
+}
+
+window.cfMonthShift = (dir) => {
+  cfPeriodOffset += dir;
+  renderCashflow();
+};
+
 function renderCashflow() {
-  const income = getVal('cf-income');
-  const monthSpend = spends.filter(s=>s.date.slice(0,7)===cfCurrentMonth).reduce((s,x)=>s+x.amt,0);
-  const surplus = income - monthSpend;
-  const [y,m] = cfCurrentMonth.split('-').map(Number);
-  document.getElementById('cf-month-label').textContent = y+'년 '+m+'월';
+  var income = getVal('cf-income') || 2200000;
+  var paydayEl = document.getElementById('cf-payday');
+  if(paydayEl) paydayEl.value = cfPayday;
+
+  var period = getPayPeriod(cfPeriodOffset);
+  var startStr = period.start.getFullYear()+'년 '+(period.start.getMonth()+1)+'월 '+period.start.getDate()+'일';
+  var endStr   = period.end.getFullYear()+'년 '+(period.end.getMonth()+1)+'월 '+period.end.getDate()+'일';
+
+  var labelEl = document.getElementById('cf-month-label');
+  if(labelEl) labelEl.textContent = startStr + ' ~ ' + endStr;
+
+  var periodLabel = document.getElementById('cf-period-label');
+  if(periodLabel) periodLabel.textContent = cfPayday+'일 급여 기준 정산 기간';
+
+  // 해당 기간 지출 합산
+  var periodSpend = spends.filter(s => dateInPeriod(s.date, period.start, period.end)).reduce((s,x)=>s+x.amt, 0);
+  var surplus = income - periodSpend;
+
   document.getElementById('cf-val-income').textContent = fmt(income);
-  document.getElementById('cf-val-spend').textContent = fmt(monthSpend);
-  const saveEl = document.getElementById('cf-val-save');
-  saveEl.textContent = fmt(Math.max(0,surplus));
+  document.getElementById('cf-val-spend').textContent  = fmt(periodSpend);
+  var saveEl = document.getElementById('cf-val-save');
+  saveEl.textContent = fmt(Math.abs(surplus));
   saveEl.style.color = surplus>=0?'var(--green)':'var(--red)';
 
-  // 최근 6개월 추이
-  const trendEl = document.getElementById('cf-trend');
-  const months6 = [];
-  for(let i=5;i>=0;i--) {
-    const d = new Date(y, m-1-i, 1);
-    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    const label = (d.getMonth()+1)+'월';
-    const sp = spends.filter(s=>s.date.slice(0,7)===key).reduce((s,x)=>s+x.amt,0);
-    months6.push({label,sp,save:Math.max(0,income-sp),total:income});
+  // 최근 6기간 추이
+  var trendEl = document.getElementById('cf-trend');
+  var periods6 = [];
+  for(var i=5;i>=0;i--) {
+    var p = getPayPeriod(cfPeriodOffset - i);
+    var sp = spends.filter(s=>dateInPeriod(s.date, p.start, p.end)).reduce((s,x)=>s+x.amt, 0);
+    var label = (p.start.getMonth()+1)+'월 '+p.start.getDate()+'일';
+    periods6.push({label, sp, save:Math.max(0,income-sp), total:income});
   }
-  const maxAmt = Math.max(...months6.map(x=>x.total),1);
-  trendEl.innerHTML = months6.map(x=>`
-    <div class="cm-bar-row">
-      <span class="cm-bar-month">${x.label}</span>
-      <div class="cm-bar-track">
-        <div class="cm-bar-seg" style="width:${Math.round(x.sp/maxAmt*100)}%;background:var(--blue);opacity:0.7"></div>
-        <div class="cm-bar-seg" style="width:${Math.round(x.save/maxAmt*100)}%;background:var(--green);opacity:0.7"></div>
-      </div>
-      <span class="cm-bar-surplus" style="color:${income-x.sp>=0?'var(--green)':'var(--red)'}">${fmt(income-x.sp)}</span>
-    </div>`).join('');
+  var maxAmt = Math.max(...periods6.map(x=>x.total), 1);
+  trendEl.innerHTML = periods6.map(x=>'<div class="cm-bar-row"><span class="cm-bar-month" style="min-width:52px;font-size:11px">'+x.label+'</span><div class="cm-bar-track"><div class="cm-bar-seg" style="width:'+Math.round(x.sp/maxAmt*100)+'%;background:var(--blue);opacity:0.7"></div><div class="cm-bar-seg" style="width:'+Math.round(x.save/maxAmt*100)+'%;background:var(--green);opacity:0.7"></div></div><span class="cm-bar-surplus" style="color:'+(income-x.sp>=0?'var(--green)':'var(--red)')+'">'+fmt(income-x.sp)+'</span></div>').join('');
 }
 
 const now=new Date();
