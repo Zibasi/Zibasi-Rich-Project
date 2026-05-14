@@ -1127,6 +1127,8 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('app-screen').style.display='block';
     setSyncStatus('syncing');
     startRealtimeListeners();
+    // 로그인 후 환율 자동 로드
+    setTimeout(fetchExchangeRates, 500);
   } else {
     unsubs.forEach(function(u){try{u();}catch(e){}});
     unsubs=[];
@@ -2176,6 +2178,117 @@ function initTabDrag(list) {
     }, {passive:true});
   });
 }
+// ── 설정 로드 함수 ──
+function loadSettings() {
+  // 다크모드
+  var dm = localStorage.getItem('darkMode') === '1';
+  if(dm) {
+    applyDarkMode(true);
+    var dmCb=document.getElementById('set-darkmode'); if(dmCb) dmCb.checked=true;
+    var knob=document.getElementById('darkmode-knob'); if(knob) knob.style.transform='translateX(20px)';
+    var sldr=document.getElementById('darkmode-slider'); if(sldr) sldr.style.background='var(--green)';
+  }
+  // 알림음
+  var snd = localStorage.getItem('soundPref') === '1';
+  if(snd) {
+    var sCb=document.getElementById('set-sound'); if(sCb) sCb.checked=true;
+    var sk=document.getElementById('sound-knob'); if(sk) sk.style.transform='translateX(20px)';
+    var ss=document.getElementById('sound-slider'); if(ss) ss.style.background='var(--green)';
+  }
+  // 급여일
+  cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
+  var pdEl = document.getElementById('cf-payday'); if(pdEl) pdEl.value = cfPayday;
+  // 고정지출 항목
+  fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
+  // 홈 카드 순서
+  homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(function(c){return c.id;});
+  // 탭 순서/숨김
+  tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(function(t){return t.id;});
+  hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
+  // 예산
+  budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
+  // 순자산 스냅
+  networthSnaps = JSON.parse(localStorage.getItem('networthSnaps') || '[]');
+  // 재무 설정 → 입력 필드 반영
+  var fs = JSON.parse(localStorage.getItem('financeSettings') || 'null');
+  if(fs) {
+    var si=document.getElementById('set-income'); if(si&&fs.income) si.value=fs.income.toLocaleString();
+    var sf=document.getElementById('set-fixed');  if(sf&&fs.fixed)  sf.value=fs.fixed.toLocaleString();
+    var sp=document.getElementById('set-pocket'); if(sp&&fs.pocket) sp.value=fs.pocket.toLocaleString();
+    var cf=document.getElementById('cf-income');  if(cf&&fs.income) cf.value=fs.income.toLocaleString();
+  }
+  // 결혼 예정일
+  var wd = localStorage.getItem('weddingDate') || '2027-09-04';
+  var wdEl=document.getElementById('set-wedding-date'); if(wdEl) wdEl.value=wd;
+  var wdEl2=document.getElementById('wd-date'); if(wdEl2) wdEl2.value=wd;
+  var rmEl=document.getElementById('rm-wedding'); if(rmEl) rmEl.value=wd;
+  // 결혼 목표/저축
+  var wdGoal=localStorage.getItem('wdGoal'), wdSaved=localStorage.getItem('wdSaved'), wdMonthly=localStorage.getItem('wdMonthly');
+  if(wdGoal) { var g=document.getElementById('wd-goal'); if(g) g.value=parseInt(wdGoal).toLocaleString(); }
+  if(wdSaved) { var s=document.getElementById('wd-saved'); if(s) s.value=parseInt(wdSaved).toLocaleString(); }
+  if(wdMonthly) { var m=document.getElementById('wd-monthly'); if(m) m.value=parseInt(wdMonthly).toLocaleString(); }
+}
+
+// ── 설정 저장 함수 ──
+window.saveFinanceSettings = function() {
+  var income = parseInt((document.getElementById('set-income').value||'0').replace(/[^0-9]/g,''))||0;
+  var fixed  = parseInt((document.getElementById('set-fixed').value||'0').replace(/[^0-9]/g,''))||0;
+  var pocket = parseInt((document.getElementById('set-pocket').value||'0').replace(/[^0-9]/g,''))||0;
+  localStorage.setItem('financeSettings', JSON.stringify({income,fixed,pocket}));
+  var cfEl = document.getElementById('cf-income');
+  if(cfEl && income) { cfEl.value = income.toLocaleString(); renderCashflow(); }
+  var msg = document.getElementById('set-finance-msg');
+  if(msg) { msg.style.display='block'; setTimeout(function(){ msg.style.display='none'; },2000); }
+  renderHome();
+};
+
+window.saveWeddingDate = function() {
+  var date = document.getElementById('set-wedding-date').value;
+  if(!date) return;
+  localStorage.setItem('weddingDate', date);
+  var wdEl = document.getElementById('wd-date');
+  if(wdEl) wdEl.value = date;
+  var rmEl = document.getElementById('rm-wedding');
+  if(rmEl) rmEl.value = date;
+  var msg = document.getElementById('set-wedding-msg');
+  if(msg) { msg.style.display='block'; setTimeout(function(){ msg.style.display='none'; },2000); }
+};
+
+function applyDarkMode(on) {
+  document.documentElement.style.setProperty('--bg',      on?'#1a1a1a':'#f5f4ef');
+  document.documentElement.style.setProperty('--surface', on?'#262626':'#ffffff');
+  document.documentElement.style.setProperty('--surface2',on?'#323232':'#f0efe9');
+  document.documentElement.style.setProperty('--text',    on?'#f0f0f0':'#1a1916');
+  document.documentElement.style.setProperty('--text2',   on?'#a0a0a0':'#6b6960');
+  document.documentElement.style.setProperty('--text3',   on?'#666':'#9e9d97');
+  document.documentElement.style.setProperty('--border',  on?'#3a3a3a':'#e5e4de');
+}
+
+window.toggleDarkMode = function(on) {
+  localStorage.setItem('darkMode', on?'1':'0');
+  applyDarkMode(on);
+  var knob   = document.getElementById('darkmode-knob');
+  var slider = document.getElementById('darkmode-slider');
+  if(knob)   knob.style.transform   = on?'translateX(20px)':'translateX(0)';
+  if(slider) slider.style.background = on?'var(--green)':'var(--border)';
+};
+
+window.saveSoundPref = function(on) {
+  localStorage.setItem('soundPref', on?'1':'0');
+  var knob   = document.getElementById('sound-knob');
+  var slider = document.getElementById('sound-slider');
+  if(knob)   knob.style.transform   = on?'translateX(20px)':'translateX(0)';
+  if(slider) slider.style.background = on?'var(--green)':'var(--border)';
+};
+
+window.resetAppSettings = function() {
+  if(!confirm('앱 설정을 모두 초기화할까요? (Firebase 데이터는 유지돼요)')) return;
+  ['tabOrder','hiddenTabs','financeSettings','weddingDate','darkMode','soundPref',
+   'homeCardOrder','hiddenHomeCards','fixedExpenses','budgets','networthSnaps','cfPayday','wdGoal','wdSaved','wdMonthly']
+  .forEach(function(k){ localStorage.removeItem(k); });
+  location.reload();
+};
+
 window.saveTabOrder = function() {
   localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
   localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
@@ -2735,8 +2848,6 @@ if(!localStorage.getItem('financeSettings')) {
 }
 // 5. 수지 월 초기화
 document.getElementById('cf-month-label').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
-// 6. 환율 로드
-fetchExchangeRates();
 </script>
 </body>
 </html>
