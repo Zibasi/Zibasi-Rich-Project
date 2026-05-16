@@ -36,12 +36,11 @@
   .logout-btn { background: none; border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: var(--text2); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
   .sync-badge { display: inline-block; font-size: 10px; background: var(--green-bg); color: var(--green); padding: 2px 7px; border-radius: 10px; margin-left: 6px; font-weight: 600; vertical-align: middle; }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: stretch; z-index: 100; padding: 0; }
-  .nav-home-fixed { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 8px env(safe-area-inset-bottom, 8px); min-width: 64px; background: var(--surface); border-right: 1px solid var(--border); cursor: pointer; border: none; border-right: 1px solid var(--border); color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 10px; flex-shrink: 0; transition: color 0.15s; z-index: 1; }
-  .nav-home-fixed svg { width: 22px; height: 22px; stroke-width: 1.6; }
+  .bottom-nav { position: fixed; bottom: 0; left: 64px; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; z-index: 100; padding: 8px 0 env(safe-area-inset-bottom, 8px); }
+  .bottom-nav::-webkit-scrollbar { display: none; }
+  .nav-home-fixed { position: fixed; bottom: 0; left: 0; width: 64px; background: var(--surface); border-top: 1px solid var(--border); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px env(safe-area-inset-bottom, 8px); cursor: pointer; border-top: 1px solid var(--border); color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 10px; z-index: 101; transition: color 0.15s; }
   .nav-home-fixed.active { color: var(--green); }
-  .nav-scroll-wrap { display: flex; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1; padding: 8px 0 env(safe-area-inset-bottom, 8px); }
-  .nav-scroll-wrap::-webkit-scrollbar { display: none; }
+  .nav-scroll-wrap { display: contents; }
   .nav-btn { flex: 0 0 auto; min-width: 64px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 8px; background: none; border: none; cursor: pointer; color: var(--text3); font-family: 'Noto Sans KR', sans-serif; font-size: 10px; transition: color 0.15s; }
   .nav-btn svg { width: 22px; height: 22px; stroke-width: 1.6; }
   .nav-btn.active { color: var(--green); }
@@ -1148,7 +1147,7 @@ function setSyncStatus(status) {
   var el = document.getElementById('sync-status');
   if(!el) return;
   if(status==='syncing') { el.textContent='↻ 동기화 중'; el.style.background='var(--amber-bg)'; el.style.color='var(--amber)'; }
-  else if(status==='ok')  { el.textContent='☁ 동기화'; el.style.background='var(--green-bg)'; el.style.color='var(--green)'; }
+  else if(status==='ok')  { var now=new Date(); var hh=String(now.getHours()).padStart(2,'0'); var mm=String(now.getMinutes()).padStart(2,'0'); el.textContent='☁ 동기화 '+hh+':'+mm; el.style.background='var(--green-bg)'; el.style.color='var(--green)'; }
   else                    { el.textContent='⚠ 오프라인'; el.style.background='#fef2f2'; el.style.color='var(--red)'; }
 }
 
