@@ -279,6 +279,10 @@
   .cm-bar-track { flex: 1; height: 10px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
   .cm-bar-seg { height: 100%; float: left; }
   .cm-bar-surplus { font-size: 12px; font-family: 'DM Mono', monospace; min-width: 56px; text-align: right; }
+  .sortable-ghost { opacity: 0.3; }
+  .sortable-chosen { background: var(--green-bg) !important; }
+  .sortable-drag { box-shadow: 0 8px 24px rgba(0,0,0,0.3); opacity: 0.9; }
+  .drag-handle:active { cursor: grabbing; }
 </style>
 </head>
 <body>
@@ -970,6 +974,7 @@
   </nav>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1306,15 +1311,14 @@ function createSortableList(opts) {
   if(!listEl) return;
   listEl.innerHTML = '';
 
-  opts.orderArr.forEach(function(id, i) {
+  opts.orderArr.forEach(function(id) {
     var info = opts.getItem(id);
     if(!info) return;
     var hidden = opts.hiddenArr.includes(id);
 
     var item = document.createElement('div');
     item.dataset.id = id;
-    item.dataset.idx = String(i);
-    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;border:2px solid transparent;transition:transform 0.15s, opacity 0.15s, border-color 0.15s;opacity:'+(hidden?'0.45':'1')+';user-select:none;-webkit-user-select:none;';
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;opacity:'+(hidden?'0.45':'1')+';user-select:none;-webkit-user-select:none;';
 
     // 체크박스
     var cb = document.createElement('input');
@@ -1334,10 +1338,11 @@ function createSortableList(opts) {
       createSortableList(opts);
     });
 
-    // 드래그 핸들 (크게 만들어서 잡기 쉽게)
+    // 드래그 핸들
     var handle = document.createElement('span');
+    handle.className = 'drag-handle';
     handle.textContent = '☰';
-    handle.style.cssText = 'color:var(--text2);font-size:20px;cursor:grab;flex-shrink:0;padding:6px 10px;border-radius:6px;background:var(--surface);touch-action:none;-webkit-touch-callout:none';
+    handle.style.cssText = 'color:var(--text2);font-size:20px;cursor:grab;flex-shrink:0;padding:6px 10px;border-radius:6px;background:var(--surface);';
 
     var lbl = document.createElement('span');
     lbl.textContent = info.label;
@@ -1349,107 +1354,29 @@ function createSortableList(opts) {
     listEl.appendChild(item);
   });
 
-  // 통합 드래그 이벤트 (PointerEvent 기반)
-  initPointerDrag(listEl, opts);
-}
-
-function initPointerDrag(listEl, opts) {
-  var state = {
-    dragging: false,
-    sourceItem: null,
-    sourceIdx: -1,
-    startY: 0,
-    ghost: null,
-    targetIdx: -1
-  };
-
-  function clearHighlights() {
-    Array.from(listEl.children).forEach(function(c){
-      c.style.borderColor = 'transparent';
-      c.style.transform = '';
-    });
+  // Sortable.js 인스턴스 초기화 (기존 게 있으면 파괴)
+  if(listEl._sortable) {
+    try { listEl._sortable.destroy(); } catch(e) {}
   }
 
-  function cleanup() {
-    if(state.ghost && state.ghost.parentNode) {
-      state.ghost.parentNode.removeChild(state.ghost);
-    }
-    if(state.sourceItem) {
-      var hidden = opts.hiddenArr.includes(state.sourceItem.dataset.id);
-      state.sourceItem.style.opacity = hidden ? '0.45' : '1';
-    }
-    clearHighlights();
-    state.dragging = false;
-    state.sourceItem = null;
-    state.ghost = null;
-    state.sourceIdx = -1;
-    state.targetIdx = -1;
-  }
-
-  // 모든 핸들에 pointerdown 등록
-  listEl.querySelectorAll('span[style*="cursor:grab"]').forEach(function(handle) {
-    handle.addEventListener('pointerdown', function(e) {
-      e.preventDefault();
-      var item = handle.parentElement;
-      state.sourceItem = item;
-      state.sourceIdx = parseInt(item.dataset.idx);
-      state.startY = e.clientY;
-      state.dragging = true;
-
-      // 고스트 생성
-      var rect = item.getBoundingClientRect();
-      state.ghost = item.cloneNode(true);
-      state.ghost.style.cssText += ';position:fixed;z-index:9999;pointer-events:none;opacity:0.9;box-shadow:0 8px 24px rgba(0,0,0,0.3);width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;';
-      document.body.appendChild(state.ghost);
-      item.style.opacity = '0.3';
-
-      handle.setPointerCapture(e.pointerId);
-    });
-
-    handle.addEventListener('pointermove', function(e) {
-      if(!state.dragging || !state.ghost) return;
-      e.preventDefault();
-
-      state.ghost.style.top = (e.clientY - state.ghost.offsetHeight/2) + 'px';
-
-      // 타겟 찾기
-      var newTarget = -1;
-      Array.from(listEl.children).forEach(function(c, idx) {
-        var r = c.getBoundingClientRect();
-        if(e.clientY >= r.top && e.clientY <= r.bottom && c !== state.sourceItem) {
-          newTarget = idx;
-        }
-      });
-
-      clearHighlights();
-      if(newTarget > -1) {
-        listEl.children[newTarget].style.borderColor = 'var(--green)';
-        state.targetIdx = newTarget;
-      } else {
-        state.targetIdx = -1;
-      }
-    });
-
-    function endDrag(e) {
-      if(!state.dragging) return;
-      var from = state.sourceIdx;
-      var to = state.targetIdx;
-
-      if(to > -1 && from !== to) {
+  if(typeof Sortable !== 'undefined') {
+    listEl._sortable = Sortable.create(listEl, {
+      handle: '.drag-handle',
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      forceFallback: true,        // 모바일 호환성 향상
+      fallbackTolerance: 5,
+      onEnd: function(evt) {
+        var from = evt.oldIndex;
+        var to = evt.newIndex;
+        if(from === to) return;
         var moved = opts.orderArr.splice(from, 1)[0];
         opts.orderArr.splice(to, 0, moved);
-        cleanup();
-        createSortableList(opts);
-      } else {
-        cleanup();
       }
-
-      try { handle.releasePointerCapture(e.pointerId); } catch(err){}
-    }
-
-    handle.addEventListener('pointerup', endDrag);
-    handle.addEventListener('pointercancel', endDrag);
-  });
+    });
+  }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
