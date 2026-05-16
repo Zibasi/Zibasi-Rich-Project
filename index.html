@@ -1298,19 +1298,9 @@ var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') 
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 공통 드래그 가능한 정렬 리스트 (홈카드/탭 공용)
+// pointerdown/move/up 통합 이벤트로 PC + 모바일 동시 지원
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/**
- * 드래그 정렬 리스트 생성
- * @param {Object} opts
- *   - listEl: 컨테이너 요소
- *   - orderArr: 순서 배열 (직접 mutate 함)
- *   - hiddenArr: 숨김 배열 (직접 mutate 함)
- *   - hiddenStorageKey: localStorage 키 (체크박스 변경 시 저장)
- *   - getItem(id): 라벨 등 정보 가져오기
- *   - onChange: 순서/숨김 변경 후 호출
- *   - onHide(id): 숨김 변경 시 호출
- */
 function createSortableList(opts) {
   var listEl = opts.listEl;
   if(!listEl) return;
@@ -1324,13 +1314,13 @@ function createSortableList(opts) {
     var item = document.createElement('div');
     item.dataset.id = id;
     item.dataset.idx = String(i);
-    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;border:2px solid transparent;transition:border-color 0.15s, opacity 0.15s;opacity:'+(hidden?'0.45':'1')+';user-select:none;';
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px;border:2px solid transparent;transition:transform 0.15s, opacity 0.15s, border-color 0.15s;opacity:'+(hidden?'0.45':'1')+';user-select:none;-webkit-user-select:none;';
 
     // 체크박스
     var cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = !hidden;
-    cb.style.cssText = 'width:17px;height:17px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
+    cb.style.cssText = 'width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0';
     cb.addEventListener('click', function(e){ e.stopPropagation(); });
     cb.addEventListener('change', function() {
       if(cb.checked) {
@@ -1341,124 +1331,124 @@ function createSortableList(opts) {
       }
       if(opts.hiddenStorageKey) localStorage.setItem(opts.hiddenStorageKey, JSON.stringify(opts.hiddenArr));
       if(opts.onHide) opts.onHide(id);
-      if(opts.onChange) opts.onChange();
+      createSortableList(opts);
     });
 
-    // 드래그 핸들 (이 부분만 드래그 시작 가능)
+    // 드래그 핸들 (크게 만들어서 잡기 쉽게)
     var handle = document.createElement('span');
-    handle.textContent = '⠿';
-    handle.style.cssText = 'color:var(--text3);font-size:20px;cursor:grab;flex-shrink:0;line-height:1;padding:0 4px;touch-action:none';
-    handle.setAttribute('draggable', 'true');
+    handle.textContent = '☰';
+    handle.style.cssText = 'color:var(--text2);font-size:20px;cursor:grab;flex-shrink:0;padding:6px 10px;border-radius:6px;background:var(--surface);touch-action:none;-webkit-touch-callout:none';
 
     var lbl = document.createElement('span');
     lbl.textContent = info.label;
-    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1;cursor:default';
+    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1';
 
     item.appendChild(cb);
     item.appendChild(handle);
     item.appendChild(lbl);
     listEl.appendChild(item);
+  });
 
-    // ── PC 드래그 (핸들에서만) ──
-    handle.addEventListener('dragstart', function(e) {
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', String(i));
-      item.style.opacity = '0.3';
-    });
-    handle.addEventListener('dragend', function() {
-      item.style.opacity = opts.hiddenArr.includes(id) ? '0.45' : '1';
-      Array.from(listEl.children).forEach(function(c){ c.style.borderColor='transparent'; });
-    });
+  // 통합 드래그 이벤트 (PointerEvent 기반)
+  initPointerDrag(listEl, opts);
+}
 
-    item.addEventListener('dragover', function(e) {
+function initPointerDrag(listEl, opts) {
+  var state = {
+    dragging: false,
+    sourceItem: null,
+    sourceIdx: -1,
+    startY: 0,
+    ghost: null,
+    targetIdx: -1
+  };
+
+  function clearHighlights() {
+    Array.from(listEl.children).forEach(function(c){
+      c.style.borderColor = 'transparent';
+      c.style.transform = '';
+    });
+  }
+
+  function cleanup() {
+    if(state.ghost && state.ghost.parentNode) {
+      state.ghost.parentNode.removeChild(state.ghost);
+    }
+    if(state.sourceItem) {
+      var hidden = opts.hiddenArr.includes(state.sourceItem.dataset.id);
+      state.sourceItem.style.opacity = hidden ? '0.45' : '1';
+    }
+    clearHighlights();
+    state.dragging = false;
+    state.sourceItem = null;
+    state.ghost = null;
+    state.sourceIdx = -1;
+    state.targetIdx = -1;
+  }
+
+  // 모든 핸들에 pointerdown 등록
+  listEl.querySelectorAll('span[style*="cursor:grab"]').forEach(function(handle) {
+    handle.addEventListener('pointerdown', function(e) {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      Array.from(listEl.children).forEach(function(c){ c.style.borderColor='transparent'; });
-      item.style.borderColor = 'var(--green)';
-    });
-    item.addEventListener('dragleave', function() { item.style.borderColor='transparent'; });
-    item.addEventListener('drop', function(e) {
-      e.preventDefault();
-      var from = parseInt(e.dataTransfer.getData('text/plain'));
-      var to = parseInt(item.dataset.idx);
-      if(isNaN(from) || isNaN(to) || from === to) return;
-      // splice 정확하게: from 제거 후 to 위치에 삽입
-      var moved = opts.orderArr.splice(from, 1)[0];
-      opts.orderArr.splice(to, 0, moved);
-      if(opts.onChange) opts.onChange();
-      createSortableList(opts); // 재렌더
-    });
-
-    // ── 터치 드래그 (핸들에서만) ──
-    var touchData = { startY:0, dragging:false, ghost:null };
-
-    handle.addEventListener('touchstart', function(e) {
-      touchData.startY = e.touches[0].clientY;
-      touchData.dragging = false;
-      touchData.ghost = null;
-    }, {passive:true});
-
-    handle.addEventListener('touchmove', function(e) {
-      var t = e.touches[0];
-      var dy = Math.abs(t.clientY - touchData.startY);
-      if(!touchData.dragging && dy < 6) return;
-
-      touchData.dragging = true;
-      e.preventDefault(); // 핸들에서 드래그할 때만 스크롤 막음
+      var item = handle.parentElement;
+      state.sourceItem = item;
+      state.sourceIdx = parseInt(item.dataset.idx);
+      state.startY = e.clientY;
+      state.dragging = true;
 
       // 고스트 생성
-      if(!touchData.ghost) {
-        var g = item.cloneNode(true);
-        var r = item.getBoundingClientRect();
-        g.style.cssText += ';position:fixed;z-index:9999;pointer-events:none;opacity:0.9;box-shadow:0 6px 20px rgba(0,0,0,0.25);width:'+r.width+'px;left:'+r.left+'px;';
-        document.body.appendChild(g);
-        touchData.ghost = g;
-        item.style.opacity = '0.3';
-      }
-      touchData.ghost.style.top = (t.clientY - 25) + 'px';
+      var rect = item.getBoundingClientRect();
+      state.ghost = item.cloneNode(true);
+      state.ghost.style.cssText += ';position:fixed;z-index:9999;pointer-events:none;opacity:0.9;box-shadow:0 8px 24px rgba(0,0,0,0.3);width:'+rect.width+'px;left:'+rect.left+'px;top:'+rect.top+'px;';
+      document.body.appendChild(state.ghost);
+      item.style.opacity = '0.3';
 
-      // 타겟 하이라이트
-      Array.from(listEl.children).forEach(function(c) {
-        var cr = c.getBoundingClientRect();
-        c.style.borderColor = (t.clientY >= cr.top && t.clientY <= cr.bottom && c !== item) ? 'var(--green)' : 'transparent';
-      });
-    }, {passive:false});
+      handle.setPointerCapture(e.pointerId);
+    });
 
-    handle.addEventListener('touchend', function(e) {
-      if(touchData.ghost) {
-        document.body.removeChild(touchData.ghost);
-        touchData.ghost = null;
-      }
-      item.style.opacity = opts.hiddenArr.includes(id) ? '0.45' : '1';
-      Array.from(listEl.children).forEach(function(c){ c.style.borderColor='transparent'; });
+    handle.addEventListener('pointermove', function(e) {
+      if(!state.dragging || !state.ghost) return;
+      e.preventDefault();
 
-      if(!touchData.dragging) return;
+      state.ghost.style.top = (e.clientY - state.ghost.offsetHeight/2) + 'px';
 
-      var t = e.changedTouches[0];
-      var fromIdx = i;
-      var toIdx = fromIdx;
-      Array.from(listEl.children).forEach(function(c) {
-        var cr = c.getBoundingClientRect();
-        if(t.clientY >= cr.top && t.clientY <= cr.bottom && c !== item) {
-          toIdx = parseInt(c.dataset.idx);
+      // 타겟 찾기
+      var newTarget = -1;
+      Array.from(listEl.children).forEach(function(c, idx) {
+        var r = c.getBoundingClientRect();
+        if(e.clientY >= r.top && e.clientY <= r.bottom && c !== state.sourceItem) {
+          newTarget = idx;
         }
       });
-      if(fromIdx !== toIdx && !isNaN(toIdx)) {
-        var moved = opts.orderArr.splice(fromIdx, 1)[0];
-        opts.orderArr.splice(toIdx, 0, moved);
-        if(opts.onChange) opts.onChange();
-        createSortableList(opts);
-      }
-    }, {passive:true});
 
-    handle.addEventListener('touchcancel', function() {
-      if(touchData.ghost) {
-        document.body.removeChild(touchData.ghost);
-        touchData.ghost = null;
+      clearHighlights();
+      if(newTarget > -1) {
+        listEl.children[newTarget].style.borderColor = 'var(--green)';
+        state.targetIdx = newTarget;
+      } else {
+        state.targetIdx = -1;
       }
-      item.style.opacity = opts.hiddenArr.includes(id) ? '0.45' : '1';
-      touchData.dragging = false;
-    }, {passive:true});
+    });
+
+    function endDrag(e) {
+      if(!state.dragging) return;
+      var from = state.sourceIdx;
+      var to = state.targetIdx;
+
+      if(to > -1 && from !== to) {
+        var moved = opts.orderArr.splice(from, 1)[0];
+        opts.orderArr.splice(to, 0, moved);
+        cleanup();
+        createSortableList(opts);
+      } else {
+        cleanup();
+      }
+
+      try { handle.releasePointerCapture(e.pointerId); } catch(err){}
+    }
+
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
   });
 }
 
