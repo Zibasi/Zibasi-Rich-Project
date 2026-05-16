@@ -1021,6 +1021,26 @@ const todayStr = () => new Date().toISOString().slice(0,10);
 const thisMonth = () => new Date().toISOString().slice(0,7);
 
 // 급여일 기준 현재 기간 지출 필터 (홈/예산/리포트 공통)
+// ── 급여일 전역 변수 및 기간 계산 함수 (최상단 정의) ──
+var cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
+
+function getPayPeriod(offset) {
+  var today = new Date();
+  var payday = cfPayday;
+  var start = new Date(today.getFullYear(), today.getMonth(), payday);
+  if(today.getDate() < payday) {
+    start = new Date(today.getFullYear(), today.getMonth()-1, payday);
+  }
+  start = new Date(start.getFullYear(), start.getMonth() + (offset||0), payday);
+  var end = new Date(start.getFullYear(), start.getMonth()+1, payday-1);
+  return {start: start, end: end};
+}
+
+function dateInPeriod(dateStr, start, end) {
+  var d = new Date(dateStr);
+  return d >= start && d <= end;
+}
+
 function currentPayPeriodSpends() {
   if(typeof getPayPeriod !== 'function') return spends.filter(s=>s.date.slice(0,7)===thisMonth());
   var p = getPayPeriod(0);
@@ -1147,6 +1167,8 @@ onAuthStateChanged(auth, async (user) => {
     startRealtimeListeners();
     // 로그인 후 환율 자동 로드
     setTimeout(fetchExchangeRates, 500);
+    // 로그인 후 수지 초기 렌더 (급여일 기준 라벨 적용)
+    setTimeout(function(){ if(typeof renderCashflow==='function') renderCashflow(); }, 300);
   } else {
     unsubs.forEach(function(u){try{u();}catch(e){}});
     unsubs=[];
@@ -2057,13 +2079,12 @@ var hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
 function renderNav() {
   var nav = document.querySelector('.bottom-nav');
   var settingBtn = nav.querySelector('[data-page="settings"]');
+  // 홈 포함 전체 탭 순서 재배치 (설정만 마지막 고정)
   tabOrder.forEach(function(id) {
-    var btn = nav.querySelector('[data-page="'+id+'"]');
+    var btn = nav.querySelector('[data-page="' + id + '"]');
     if(!btn) return;
-    if(hiddenTabs.includes(id)) {
-      btn.style.display = 'none';
-    } else {
-      btn.style.display = '';
+    btn.style.display = hiddenTabs.includes(id) ? 'none' : '';
+    if(!hiddenTabs.includes(id)) {
       nav.insertBefore(btn, settingBtn || null);
     }
   });
@@ -2784,7 +2805,6 @@ window.calcRoadmap = function() {
 };
 
 // 급여일 기준 수지
-var cfPayday = parseInt(localStorage.getItem('cfPayday') || '15');
 var cfPeriodOffset = 0; // 기간 이동 (0=현재)
 
 window.savePayday = function() {
@@ -2795,24 +2815,7 @@ window.savePayday = function() {
 };
 
 // 급여일 기준 기간 계산
-function getPayPeriod(offset) {
-  var today = new Date();
-  var payday = cfPayday;
-  // 현재 기간 시작일 계산
-  var start = new Date(today.getFullYear(), today.getMonth(), payday);
-  if(today.getDate() < payday) {
-    start = new Date(today.getFullYear(), today.getMonth()-1, payday);
-  }
-  // offset 적용
-  start = new Date(start.getFullYear(), start.getMonth() + offset, payday);
-  var end = new Date(start.getFullYear(), start.getMonth()+1, payday-1);
-  return {start, end};
-}
-
-function dateInPeriod(dateStr, start, end) {
-  var d = new Date(dateStr);
-  return d >= start && d <= end;
-}
+// getPayPeriod moved above
 
 window.cfMonthShift = (dir) => {
   cfPeriodOffset += dir;
@@ -2820,7 +2823,13 @@ window.cfMonthShift = (dir) => {
 };
 
 function renderCashflow() {
-  var income = getVal('cf-income') || 2200000;
+  // income: 입력값 → financeSettings → 기본값 순으로
+  var cfVal = getVal('cf-income');
+  var fs = JSON.parse(localStorage.getItem('financeSettings')||'null');
+  var income = cfVal || (fs&&fs.income ? fs.income : 2200000);
+  // cf-income 필드에도 반영
+  var cfEl = document.getElementById('cf-income');
+  if(cfEl && !cfEl.value && income) cfEl.value = income.toLocaleString();
   var paydayEl = document.getElementById('cf-payday');
   if(paydayEl) paydayEl.value = cfPayday;
 
@@ -2861,7 +2870,9 @@ const now=new Date();
 document.getElementById('header-date').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 ('+['일','월','화','수','목','금','토'][now.getDay()]+'요일)';
 document.getElementById('inv-month').value=now.toISOString().slice(0,7);
 document.getElementById('sp-date').value=todayStr();
-document.getElementById('sp-filter-month').value=now.toISOString().slice(0,7);
+// 가계부 필터 기본값 - 급여일 기준 현재 기간의 시작 월
+var _initPeriod = getPayPeriod(0);
+document.getElementById('sp-filter-month').value = _initPeriod.start.getFullYear()+'-'+String(_initPeriod.start.getMonth()+1).padStart(2,'0');
 // 1. 설정 먼저 로드 (localStorage → 화면 반영)
 loadSettings();
 // 2. 네비 렌더 (hiddenTabs, tabOrder 반영)
@@ -2879,7 +2890,6 @@ if(!localStorage.getItem('financeSettings')) {
   if(cfEl && !cfEl.value) cfEl.value = '2,200,000';
 }
 // 5. 수지 월 초기화
-document.getElementById('cf-month-label').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월';
 </script>
 </body>
 </html>
