@@ -3025,12 +3025,18 @@ function renderCashflow() {
   var periodLabel = document.getElementById('cf-period-label');
   if(periodLabel) periodLabel.textContent = cfPayday+'일 급여 기준 정산 기간';
 
+  // 고정지출 합산 (항목 합계 우선, 없으면 설정값)
+  var feItemsCF = JSON.parse(localStorage.getItem('fixedExpenses')||'[]');
+  var fixedTotal = feItemsCF.reduce((s,f)=>s+f.amt, 0);
+  if(!fixedTotal && fs && fs.fixed) fixedTotal = fs.fixed;
+
   // 해당 기간 지출 합산
   var periodSpend = spends.filter(s => dateInPeriod(s.date, period.start, period.end)).reduce((s,x)=>s+x.amt, 0);
-  var surplus = income - periodSpend;
+  var totalSpend = fixedTotal + periodSpend;
+  var surplus = income - totalSpend;
 
   document.getElementById('cf-val-income').textContent = fmt(income);
-  document.getElementById('cf-val-spend').textContent  = fmt(periodSpend);
+  document.getElementById('cf-val-spend').textContent  = fmt(totalSpend);
   var saveEl = document.getElementById('cf-val-save');
   saveEl.textContent = fmt(Math.abs(surplus));
   saveEl.style.color = surplus>=0?'var(--green)':'var(--red)';
@@ -3041,8 +3047,9 @@ function renderCashflow() {
   for(var i=5;i>=0;i--) {
     var p = getPayPeriod(cfPeriodOffset - i);
     var sp = spends.filter(s=>dateInPeriod(s.date, p.start, p.end)).reduce((s,x)=>s+x.amt, 0);
+    var totalSp = fixedTotal + sp;
     var label = (p.start.getMonth()+1)+'월 '+p.start.getDate()+'일';
-    periods6.push({label, sp, save:Math.max(0,income-sp), total:income});
+    periods6.push({label, sp:totalSp, save:Math.max(0,income-totalSp), total:income});
   }
   var maxAmt = Math.max(...periods6.map(x=>x.total), 1);
   trendEl.innerHTML = periods6.map(x=>'<div class="cm-bar-row"><span class="cm-bar-month" style="min-width:52px;font-size:11px">'+x.label+'</span><div class="cm-bar-track"><div class="cm-bar-seg" style="width:'+Math.round(x.sp/maxAmt*100)+'%;background:var(--blue);opacity:0.7"></div><div class="cm-bar-seg" style="width:'+Math.round(x.save/maxAmt*100)+'%;background:var(--green);opacity:0.7"></div></div><span class="cm-bar-surplus" style="color:'+(income-x.sp>=0?'var(--green)':'var(--red)')+'">'+fmt(income-x.sp)+'</span></div>').join('');
