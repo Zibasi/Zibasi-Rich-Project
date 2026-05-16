@@ -2352,7 +2352,7 @@ var hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
 function renderNav() {
   var nav = document.querySelector('.bottom-nav');
   var settingBtn = nav.querySelector('[data-page="settings"]');
-  // 홈 포함 전체 탭 순서 재배치 (설정만 마지막 고정)
+  var homeBtn = nav.querySelector('#nav-home-btn');
   tabOrder.forEach(function(id) {
     var btn = nav.querySelector('[data-page="' + id + '"]');
     if(!btn) return;
@@ -2361,6 +2361,8 @@ function renderNav() {
       nav.insertBefore(btn, settingBtn || null);
     }
   });
+  // 홈버튼 항상 맨 앞 고정
+  if(homeBtn) nav.insertBefore(homeBtn, nav.firstChild);
 }
 
 function renderTabSortList() {
