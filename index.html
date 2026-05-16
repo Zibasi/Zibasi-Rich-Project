@@ -967,17 +967,9 @@
         <div class="card-label">화면 구성 관리</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 숨겨져요 · 드래그로 순서 변경</div>
 
-        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.6">
-          💡 <b style="color:var(--text)">홈 카드</b>는 메인 화면에 보이는 정보 카드, <b style="color:var(--text)">탭</b>은 하단 네비게이션 메뉴예요. 서로 다른 영역이라 영역 안에서만 순서 변경되고, 체크박스로 표시/숨김을 조절할 수 있어요.
-        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 숨겨져요 · ☰ 핸들을 드래그해서 순서 변경</div>
 
-        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">📌 홈 카드</div>
-        <div id="home-card-sort-list" style="margin-bottom:16px"></div>
-
-        <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
-
-        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">📂 탭</div>
-        <div id="tab-sort-list"></div>
+        <div id="unified-sort-list"></div>
 
         <div style="display:flex;gap:8px;margin-top:16px">
           <button class="btn btn-primary" style="flex:2" onclick="saveAllLayout()">저장</button>
@@ -1408,8 +1400,8 @@ function createSortableList(opts) {
     handle.style.cssText = 'color:var(--text2);font-size:20px;cursor:grab;flex-shrink:0;padding:6px 10px;border-radius:6px;background:var(--surface);';
 
     var lbl = document.createElement('span');
-    lbl.textContent = info.label;
-    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1';
+    lbl.innerHTML = info.label; // HTML 태그(뱃지 등) 허용
+    lbl.style.cssText = 'font-size:14px;font-weight:500;flex:1;display:flex;align-items:center;gap:4px';
 
     item.appendChild(cb);
     item.appendChild(handle);
@@ -1445,24 +1437,94 @@ function createSortableList(opts) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 홈 카드 정렬 리스트
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function renderHomeCardSortList() {
-  var el = document.getElementById('home-card-sort-list');
+// ── 통합 순서 배열 관리 ──
+var UNIFIED_ITEMS = null;
+
+function initUnifiedOrder() {
+  if(UNIFIED_ITEMS) return;
+  var saved = JSON.parse(localStorage.getItem('unifiedOrder') || 'null');
+  if(saved && saved.length) {
+    // 신규 항목(DEFAULT_TABS/HOME_CARDS에 있으나 saved에 없는 것) 추가
+    var savedIds = saved.map(function(x){return x.id;});
+    HOME_CARDS.forEach(function(c){
+      if(!savedIds.includes(c.id)) saved.push({id:c.id, type:'card', hidden:!c.default});
+    });
+    DEFAULT_TABS.forEach(function(t){
+      if(!savedIds.includes(t.id) && t.id !== 'home') saved.push({id:t.id, type:'tab', hidden:false});
+    });
+    // home 탭 제거
+    saved = saved.filter(function(x){return x.id !== 'home';});
+    UNIFIED_ITEMS = saved;
+    return;
+  }
+  // 최초 - 홈카드 먼저, 탭 나중
+  var items = [];
+  HOME_CARDS.forEach(function(c) {
+    items.push({id:c.id, type:'card', hidden:!c.default});
+  });
+  DEFAULT_TABS.forEach(function(t) {
+    if(t.id !== 'home') items.push({id:t.id, type:'tab', hidden:false});
+  });
+  UNIFIED_ITEMS = items;
+}
+
+function saveUnifiedOrder() {
+  localStorage.setItem('unifiedOrder', JSON.stringify(UNIFIED_ITEMS));
+  homeCardOrder = UNIFIED_ITEMS.filter(function(x){return x.type==='card';}).map(function(x){return x.id;});
+  tabOrder      = UNIFIED_ITEMS.filter(function(x){return x.type==='tab';}).map(function(x){return x.id;});
+  hiddenTabs    = UNIFIED_ITEMS.filter(function(x){return x.type==='tab' && x.hidden;}).map(function(x){return x.id;});
+  var hiddenCards = UNIFIED_ITEMS.filter(function(x){return x.type==='card' && x.hidden;}).map(function(x){return x.id;});
+  localStorage.setItem('homeCardOrder',  JSON.stringify(homeCardOrder));
+  localStorage.setItem('tabOrder',       JSON.stringify(tabOrder));
+  localStorage.setItem('hiddenTabs',     JSON.stringify(hiddenTabs));
+  localStorage.setItem('hiddenHomeCards',JSON.stringify(hiddenCards));
+}
+
+function getUnifiedLabel(item) {
+  if(item.type === 'card') {
+    var c = HOME_CARDS.find(function(x){return x.id===item.id;});
+    return (c ? c.label : item.id) + '<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:2px 6px;border-radius:10px;margin-left:6px">홈카드</span>';
+  } else {
+    var t = DEFAULT_TABS.find(function(x){return x.id===item.id;});
+    return (t ? t.label : item.id) + '<span style="font-size:10px;background:var(--blue-bg);color:var(--blue);padding:2px 6px;border-radius:10px;margin-left:6px">탭</span>';
+  }
+}
+
+function renderUnifiedSortList() {
+  initUnifiedOrder();
+  var el = document.getElementById('unified-sort-list');
   if(!el) return;
-  var hiddenCards = JSON.parse(localStorage.getItem('hiddenHomeCards') || '[]');
+  var orderArr = UNIFIED_ITEMS.map(function(x){return x.id;});
+  var hiddenArr = UNIFIED_ITEMS.filter(function(x){return x.hidden;}).map(function(x){return x.id;});
 
   createSortableList({
     listEl: el,
-    orderArr: homeCardOrder,
-    hiddenArr: hiddenCards,
-    hiddenStorageKey: 'hiddenHomeCards',
+    orderArr: orderArr,
+    hiddenArr: hiddenArr,
+    hiddenStorageKey: null,
     getItem: function(id) {
-      var c = HOME_CARDS.find(function(x){return x.id===id;});
-      return c ? { label: c.label } : null;
+      var item = UNIFIED_ITEMS.find(function(x){return x.id===id;});
+      if(!item) return null;
+      return {label: getUnifiedLabel(item)};
     },
-    onHide: function() { applyHomeCardOrder(); },
-    onChange: function() {} // 저장은 saveAllLayout에서
+    onHide: function(id) {
+      var item = UNIFIED_ITEMS.find(function(x){return x.id===id;});
+      if(item) item.hidden = !item.hidden;
+    },
+    onChange: function() {
+      // Sortable이 DOM 순서 바꾼 후 orderArr도 바뀜 → UNIFIED_ITEMS 순서 동기화
+      var newIds = Array.from(el.children).map(function(c){return c.dataset.id;}).filter(Boolean);
+      var reordered = newIds.map(function(id){
+        return UNIFIED_ITEMS.find(function(x){return x.id===id;});
+      }).filter(Boolean);
+      UNIFIED_ITEMS.length = 0;
+      reordered.forEach(function(x){UNIFIED_ITEMS.push(x);});
+    }
   });
 }
+
+// 기존 함수 유지 (내부적으로 통합 리스트 호출)
+function renderHomeCardSortList() { renderUnifiedSortList(); }
 
 
 window.saveHomeCardOrder = function() {
@@ -2277,21 +2339,7 @@ function renderNav() {
 }
 
 function renderTabSortList() {
-  var list = document.getElementById('tab-sort-list');
-  if(!list) return;
-
-  createSortableList({
-    listEl: list,
-    orderArr: tabOrder,
-    hiddenArr: hiddenTabs,
-    hiddenStorageKey: 'hiddenTabs',
-    getItem: function(id) {
-      var t = DEFAULT_TABS.find(function(x){return x.id===id;});
-      return t ? { label: t.label } : null;
-    },
-    onHide: function() { renderNav(); },
-    onChange: function() {}
-  });
+  renderUnifiedSortList(); // 통합 리스트로 위임
 }
 
 
@@ -2319,18 +2367,13 @@ function loadSettings() {
   fixedExpenses = JSON.parse(localStorage.getItem('fixedExpenses') || '[]');
   // 홈 카드 순서
   homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(function(c){return c.id;});
-  // 탭 순서/숨김
-  tabOrder = JSON.parse(localStorage.getItem('tabOrder') || 'null') || DEFAULT_TABS.map(function(t){return t.id;});
-  hiddenTabs = JSON.parse(localStorage.getItem('hiddenTabs') || '[]');
-  // 기존 사용자 마이그레이션: home 탭 자동 제거
-  if(tabOrder.includes('home')) {
-    tabOrder = tabOrder.filter(function(id){return id !== 'home';});
-    localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
-  }
-  if(hiddenTabs.includes('home')) {
-    hiddenTabs = hiddenTabs.filter(function(id){return id !== 'home';});
-    localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
-  }
+  // 통합 순서 초기화
+  UNIFIED_ITEMS = null;
+  initUnifiedOrder();
+  // 탭 순서/숨김 동기화
+  tabOrder = UNIFIED_ITEMS.filter(function(x){return x.type==='tab';}).map(function(x){return x.id;});
+  hiddenTabs = UNIFIED_ITEMS.filter(function(x){return x.type==='tab' && x.hidden;}).map(function(x){return x.id;});
+  homeCardOrder = UNIFIED_ITEMS.filter(function(x){return x.type==='card';}).map(function(x){return x.id;});
   // 예산
   budgets = JSON.parse(localStorage.getItem('budgets') || '{}');
   // 순자산 스냅
@@ -2417,28 +2460,27 @@ window.resetAppSettings = function() {
 
 // 통합 저장/초기화
 window.saveAllLayout = function() {
-  localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
-  localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
-  localStorage.setItem('homeCardOrder', JSON.stringify(homeCardOrder));
+  saveUnifiedOrder();
   renderNav();
   applyHomeCardOrder();
-  loadSettings();
   alert('저장됐어요! ✓');
 };
 
 window.resetAllLayout = function() {
   if(!confirm('화면 구성을 초기화할까요?')) return;
-  tabOrder = DEFAULT_TABS.map(function(t){return t.id;});
-  hiddenTabs = [];
-  homeCardOrder = HOME_CARDS.map(function(c){return c.id;});
+  localStorage.removeItem('unifiedOrder');
   localStorage.removeItem('tabOrder');
   localStorage.removeItem('hiddenTabs');
   localStorage.removeItem('homeCardOrder');
   localStorage.removeItem('hiddenHomeCards');
+  UNIFIED_ITEMS = null;
+  initUnifiedOrder();
+  tabOrder = DEFAULT_TABS.map(function(t){return t.id;});
+  hiddenTabs = [];
+  homeCardOrder = HOME_CARDS.map(function(c){return c.id;});
   renderNav();
   applyHomeCardOrder();
-  renderHomeCardSortList();
-  renderTabSortList();
+  renderUnifiedSortList();
 };
 
 window.saveTabOrder = function() {
@@ -2558,8 +2600,7 @@ window.goPage = (id,btn) => {
   btn.classList.add('active');
   if(id==='cashflow') renderCashflow();
   if(id==='settings') {
-    renderHomeCardSortList();
-    renderTabSortList();
+    renderUnifiedSortList();
     renderFixedExpenses();
   }
   if(id==='assets') renderAssets();
