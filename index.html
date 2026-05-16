@@ -340,7 +340,10 @@
           <div class="stat-box"><div class="s-label">결혼 D-day</div><div class="s-val" id="home-wedding-dday" style="color:var(--amber)">D-???</div></div>
         </div>
         <div class="card" id="home-cashflow-card" style="margin-top:12px;padding:14px 16px">
-          <div class="card-label" style="margin-bottom:10px">이달 수지</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="card-label" style="margin-bottom:0">이달 수지</div>
+            <span style="font-size:11px;color:var(--text3)" id="home-period-label"></span>
+          </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)">
             <span style="color:var(--text2)">월 수입</span>
             <span id="home-income-val" style="font-weight:600;color:var(--blue)">0원</span>
@@ -786,7 +789,10 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-label">이번 달 예산 현황</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="card-label" style="margin-bottom:0">예산 현황</div>
+          <span style="font-size:11px;color:var(--text3)" id="budget-period-label"></span>
+        </div>
         <div id="budget-status"><div class="empty">예산을 설정해보세요</div></div>
       </div>
     </div>
@@ -1013,6 +1019,18 @@ function getVal(id) {
 
 const todayStr = () => new Date().toISOString().slice(0,10);
 const thisMonth = () => new Date().toISOString().slice(0,7);
+
+// 급여일 기준 현재 기간 지출 필터 (홈/예산/리포트 공통)
+function currentPayPeriodSpends() {
+  if(typeof getPayPeriod !== 'function') return spends.filter(s=>s.date.slice(0,7)===thisMonth());
+  var p = getPayPeriod(0);
+  return spends.filter(function(s){ return dateInPeriod(s.date, p.start, p.end); });
+}
+function currentPayPeriodLabel() {
+  if(typeof getPayPeriod !== 'function') return thisMonth();
+  var p = getPayPeriod(0);
+  return (p.start.getMonth()+1)+'월 '+p.start.getDate()+'일~'+(p.end.getMonth()+1)+'월 '+p.end.getDate()+'일';
+}
 
 window.switchTab = (tab) => {
   document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='signup'&&i===1)));
@@ -1955,8 +1973,11 @@ function renderHome() {
   const total=assets.reduce((s,a)=>s+a.amt,0);
   document.getElementById('home-total').textContent=fmt(total);
   const tm=thisMonth();
-  const mSpend=spends.filter(s=>s.date.slice(0,7)===tm).reduce((s,x)=>s+x.amt,0);
-  document.getElementById('home-spend').textContent=fmt(mSpend);
+  // 급여일 기준 기간 지출
+  const periodSpends = currentPayPeriodSpends();
+  const mSpend = periodSpends.reduce((s,x)=>s+x.amt,0);
+  const spendEl = document.getElementById('home-spend');
+  if(spendEl) { spendEl.textContent=fmt(mSpend); }
   const mInvest=invests.filter(i=>i.month===tm).reduce((s,x)=>s+x.amt,0);
   document.getElementById('home-prog-val').textContent=fmt(mInvest)+' / 50만원';
   document.getElementById('home-prog-bar').style.width=Math.min(Math.round(mInvest/500000*100),100)+'%';
@@ -1971,8 +1992,9 @@ function renderHome() {
   homeTotal.style.color=netAssetVal>=0?'var(--green)':'var(--red)';
   document.querySelector('[id="home-total"]').closest('.stat-box').querySelector('.s-label').textContent='순자산';
 
-  // 결혼 D-day
-  const wDate=new Date('2027-09-04'); wDate.setHours(0,0,0,0);
+  // 결혼 D-day - localStorage 우선
+  const wDateStr = localStorage.getItem('weddingDate') || '2027-09-04';
+  const wDate=new Date(wDateStr); wDate.setHours(0,0,0,0);
   const today2=new Date(); today2.setHours(0,0,0,0);
   const wDiff=Math.round((wDate-today2)/(1000*60*60*24));
   const wEl=document.getElementById('home-wedding-dday');
@@ -1985,7 +2007,11 @@ function renderHome() {
   const feItems = JSON.parse(localStorage.getItem('fixedExpenses')||'[]');
   const fixedFromItems = feItems.reduce((s,f)=>s+f.amt, 0);
   const fixed = fixedFromItems > 0 ? fixedFromItems : ((fs2&&fs2.fixed) ? fs2.fixed : 0);
+  // 급여일 기준 수지 계산
   const surplus = income - fixed - mSpend;
+  // 급여일 기간 라벨 표시
+  var periodLabelEl = document.getElementById('home-period-label');
+  if(periodLabelEl) periodLabelEl.textContent = currentPayPeriodLabel();
 
   var incomeEl = document.getElementById('home-income-val');
   var fixedEl  = document.getElementById('home-fixed-val');
@@ -2523,9 +2549,13 @@ function renderBudgetList() {
 function renderBudgetStatus() {
   var el = document.getElementById('budget-status');
   if(!el) return;
-  var tm = thisMonth();
+  // 급여일 기준 기간 지출
+  var periodSpends = currentPayPeriodSpends();
   var catSpend = {};
-  spends.filter(s=>s.date.slice(0,7)===tm).forEach(function(s){ catSpend[s.cat]=(catSpend[s.cat]||0)+s.amt; });
+  periodSpends.forEach(function(s){ catSpend[s.cat]=(catSpend[s.cat]||0)+s.amt; });
+  // 기간 라벨
+  var budgetLbl = document.getElementById('budget-period-label');
+  if(budgetLbl) budgetLbl.textContent = currentPayPeriodLabel();
   if(!Object.keys(budgets).length) { el.innerHTML='<div class="empty">예산을 설정해보세요</div>'; return; }
   el.innerHTML = '';
   Object.entries(budgets).forEach(function(entry) {
@@ -2544,10 +2574,9 @@ function renderBudgetStatus() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 var reportCurrentMonth = new Date().toISOString().slice(0,7);
 
+window.reportPeriodOffset = 0;
 window.reportMonthShift = function(dir) {
-  var parts = reportCurrentMonth.split('-').map(Number);
-  var d = new Date(parts[0], parts[1]-1+dir, 1);
-  reportCurrentMonth = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  window.reportPeriodOffset = (window.reportPeriodOffset||0) + dir;
   renderReport();
 };
 
@@ -2555,14 +2584,17 @@ function renderReport() {
   var el = document.getElementById('report-content');
   var lbl = document.getElementById('report-month-label');
   if(!el||!lbl) return;
-  var parts = reportCurrentMonth.split('-').map(Number);
-  lbl.textContent = parts[0]+'년 '+parts[1]+'월';
 
-  // 이번달 vs 지난달
-  var prevD = new Date(parts[0], parts[1]-2, 1);
-  var prevMonth = prevD.getFullYear()+'-'+String(prevD.getMonth()+1).padStart(2,'0');
-  var thisList = spends.filter(s=>s.date.slice(0,7)===reportCurrentMonth);
-  var prevList = spends.filter(s=>s.date.slice(0,7)===prevMonth);
+  // 급여일 기준 현재/이전 기간
+  var reportOffset = window.reportPeriodOffset || 0;
+  var curPeriod  = getPayPeriod(reportOffset);
+  var prevPeriod = getPayPeriod(reportOffset - 1);
+  lbl.textContent = (curPeriod.start.getMonth()+1)+'월 '+curPeriod.start.getDate()+'일 ~ '+(curPeriod.end.getMonth()+1)+'월 '+curPeriod.end.getDate()+'일';
+
+  var thisList = spends.filter(function(s){ return dateInPeriod(s.date, curPeriod.start, curPeriod.end); });
+  var prevList = spends.filter(function(s){ return dateInPeriod(s.date, prevPeriod.start, prevPeriod.end); });
+  // 달력월 변수 (하위 호환)
+  var parts = [curPeriod.start.getFullYear(), curPeriod.start.getMonth()+1];
   var thisTotal = thisList.reduce((s,x)=>s+x.amt,0);
   var prevTotal = prevList.reduce((s,x)=>s+x.amt,0);
   var diff = thisTotal - prevTotal;
