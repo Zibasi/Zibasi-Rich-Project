@@ -387,6 +387,48 @@
         <div class="card-label">최근 투자 기록</div>
         <div id="home-recent"><div class="empty">아직 기록이 없어요</div></div>
       </div>
+
+      <!-- 자산 요약 카드 -->
+      <div class="card" id="home-assets-card" style="display:none">
+        <div class="card-label">자산 요약</div>
+        <div id="home-assets-summary"></div>
+      </div>
+
+      <!-- 대출 요약 카드 -->
+      <div class="card" id="home-loans-card" style="display:none">
+        <div class="card-label">대출 요약</div>
+        <div id="home-loans-summary"></div>
+      </div>
+
+      <!-- 예적금 만기 카드 -->
+      <div class="card" id="home-savings-card" style="display:none">
+        <div class="card-label">예적금 만기</div>
+        <div id="home-savings-summary"></div>
+      </div>
+
+      <!-- 가계부 최근 지출 -->
+      <div class="card" id="home-spends-card" style="display:none">
+        <div class="card-label">최근 지출</div>
+        <div id="home-spends-summary"></div>
+      </div>
+
+      <!-- 예산 현황 카드 -->
+      <div class="card" id="home-budget-card" style="display:none">
+        <div class="card-label">예산 현황</div>
+        <div id="home-budget-summary"></div>
+      </div>
+
+      <!-- 결혼자금 진행률 카드 -->
+      <div class="card" id="home-wedding-fund-card" style="display:none">
+        <div class="card-label">결혼자금 달성률</div>
+        <div id="home-wedding-fund-summary"></div>
+      </div>
+
+      <!-- 순자산 변화 카드 -->
+      <div class="card" id="home-networth-card" style="display:none">
+        <div class="card-label">순자산 변화</div>
+        <div id="home-networth-summary"></div>
+      </div>
     </div>
 
     <!-- 결혼자금 트래커 페이지 -->
@@ -919,12 +961,16 @@
         <div class="card-label">화면 구성 관리</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 숨겨져요 · 드래그로 순서 변경</div>
 
-        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">홈 카드</div>
+        <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--text2);line-height:1.6">
+          💡 <b style="color:var(--text)">홈 카드</b>는 메인 화면에 보이는 정보 카드, <b style="color:var(--text)">탭</b>은 하단 네비게이션 메뉴예요. 서로 다른 영역이라 영역 안에서만 순서 변경되고, 체크박스로 표시/숨김을 조절할 수 있어요.
+        </div>
+
+        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">📌 홈 카드</div>
         <div id="home-card-sort-list" style="margin-bottom:16px"></div>
 
         <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
 
-        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">탭</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">📂 탭</div>
         <div id="tab-sort-list"></div>
 
         <div style="display:flex;gap:8px;margin-top:16px">
@@ -1139,7 +1185,7 @@ function startRealtimeListeners() {
 
   var qSp = query(col('spends'),orderBy('createdAt','desc'));
   unsubs.push(onSnapshot(qSp, function(snap){
-    spends=snap.docs.map(d=>({id:d.id,...d.data()})); renderSpends(); renderHome(); setSyncStatus('ok');
+    spends=snap.docs.map(d=>({id:d.id,...d.data()})); renderSpends(); renderHome(); applyHomeCardOrder(); setSyncStatus('ok');
   }, function(){setSyncStatus('error');}));
 
   var qM = query(col('memos'),orderBy('createdAt','desc'));
@@ -1149,17 +1195,17 @@ function startRealtimeListeners() {
 
   var qSv = query(col('savings'),orderBy('createdAt','desc'));
   unsubs.push(onSnapshot(qSv, function(snap){
-    savings=snap.docs.map(d=>({id:d.id,...d.data()})); renderSavings(); setSyncStatus('ok');
+    savings=snap.docs.map(d=>({id:d.id,...d.data()})); renderSavings(); applyHomeCardOrder(); setSyncStatus('ok');
   }, function(){setSyncStatus('error');}));
 
   var qA = query(col('assets'),orderBy('createdAt','desc'));
   unsubs.push(onSnapshot(qA, function(snap){
-    assets=snap.docs.map(d=>({id:d.id,...d.data()})); renderAssets(); renderHome(); setSyncStatus('ok');
+    assets=snap.docs.map(d=>({id:d.id,...d.data()})); renderAssets(); renderHome(); applyHomeCardOrder(); setSyncStatus('ok');
   }, function(){setSyncStatus('error');}));
 
   var qL = query(col('loans'),orderBy('createdAt','desc'));
   unsubs.push(onSnapshot(qL, function(snap){
-    loans=snap.docs.map(d=>({id:d.id,...d.data()})); renderLoans(); renderHome(); setSyncStatus('ok');
+    loans=snap.docs.map(d=>({id:d.id,...d.data()})); renderLoans(); renderHome(); applyHomeCardOrder(); setSyncStatus('ok');
   }, function(){setSyncStatus('error');}));
 }
 
@@ -1293,13 +1339,25 @@ function renderFixedExpenses() {
 
 // ── 홈 카드 순서 ──
 var HOME_CARDS = [
-  {id:'exchange', label:'환율'},
-  {id:'stats', label:'순자산 / D-day'},
-  {id:'cashflow', label:'이달 수지'},
-  {id:'invest-goal', label:'투자 목표'},
-  {id:'recent', label:'최근 투자 기록'},
+  {id:'exchange',      label:'💱 환율',           default:true},
+  {id:'stats',         label:'📊 순자산 / D-day',  default:true},
+  {id:'cashflow',      label:'💰 이달 수지',       default:true},
+  {id:'invest-goal',   label:'🎯 투자 목표',       default:true},
+  {id:'recent',        label:'📈 최근 투자 기록',  default:true},
+  {id:'assets',        label:'🏦 자산 요약',       default:false},
+  {id:'loans',         label:'💳 대출 요약',       default:false},
+  {id:'savings',       label:'⏰ 예적금 만기',     default:false},
+  {id:'spends',        label:'🛒 최근 지출',       default:false},
+  {id:'budget',        label:'📋 예산 현황',       default:false},
+  {id:'wedding-fund',  label:'💍 결혼자금 달성률', default:false},
+  {id:'networth',      label:'📉 순자산 변화',     default:false},
 ];
-var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(c=>c.id);
+var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(function(c){return c.id;});
+// 기본 숨김 카드 - default:false인 것들
+if(!localStorage.getItem('hiddenHomeCards')) {
+  var defaultHidden = HOME_CARDS.filter(function(c){return !c.default;}).map(function(c){return c.id;});
+  localStorage.setItem('hiddenHomeCards', JSON.stringify(defaultHidden));
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 공통 드래그 가능한 정렬 리스트 (홈카드/탭 공용)
@@ -1424,11 +1482,18 @@ function applyHomeCardOrder() {
   var hiddenCards = JSON.parse(localStorage.getItem('hiddenHomeCards') || '[]');
 
   var cardMap = {
-    'exchange':     document.getElementById('home-ex-row'),
-    'stats':        document.getElementById('home-stats-grid'),
-    'cashflow':     document.getElementById('home-cashflow-card'),
-    'invest-goal':  document.getElementById('home-invest-goal-card'),
-    'recent':       document.getElementById('home-recent-card'),
+    'exchange':      document.getElementById('home-ex-row'),
+    'stats':         document.getElementById('home-stats-grid'),
+    'cashflow':      document.getElementById('home-cashflow-card'),
+    'invest-goal':   document.getElementById('home-invest-goal-card'),
+    'recent':        document.getElementById('home-recent-card'),
+    'assets':        document.getElementById('home-assets-card'),
+    'loans':         document.getElementById('home-loans-card'),
+    'savings':       document.getElementById('home-savings-card'),
+    'spends':        document.getElementById('home-spends-card'),
+    'budget':        document.getElementById('home-budget-card'),
+    'wedding-fund':  document.getElementById('home-wedding-fund-card'),
+    'networth':      document.getElementById('home-networth-card'),
   };
 
   // 숨김 처리
@@ -1443,6 +1508,138 @@ function applyHomeCardOrder() {
     var el = cardMap[id];
     if(el && el.parentNode === homePageEl) homePageEl.appendChild(el);
   });
+
+  // 표시된 카드 데이터 렌더링
+  if(!hiddenCards.includes('assets'))       renderHomeAssetsCard();
+  if(!hiddenCards.includes('loans'))        renderHomeLoansCard();
+  if(!hiddenCards.includes('savings'))      renderHomeSavingsCard();
+  if(!hiddenCards.includes('spends'))       renderHomeSpendsCard();
+  if(!hiddenCards.includes('budget'))       renderHomeBudgetCard();
+  if(!hiddenCards.includes('wedding-fund')) renderHomeWeddingFundCard();
+  if(!hiddenCards.includes('networth'))     renderHomeNetworthCard();
+}
+
+// ── 신규 홈 카드 렌더 함수들 ──
+function renderHomeAssetsCard() {
+  var el = document.getElementById('home-assets-summary');
+  if(!el) return;
+  if(!assets.length) { el.innerHTML = '<div class="empty" style="padding:10px 0">등록된 자산이 없어요</div>'; return; }
+  var total = assets.reduce(function(s,a){return s+a.amt;},0);
+  var catTotals = {};
+  assets.forEach(function(a){ catTotals[a.cat] = (catTotals[a.cat]||0) + a.amt; });
+  var html = '<div style="font-size:22px;font-weight:600;font-family:monospace;color:var(--green);margin-bottom:10px">'+fmt(total)+'</div>';
+  Object.entries(catTotals).sort(function(a,b){return b[1]-a[1];}).slice(0,5).forEach(function(entry){
+    var pct = Math.round(entry[1]/total*100);
+    html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text2)">'+entry[0]+'</span><span><span style="font-weight:600;font-family:monospace">'+fmt(entry[1])+'</span> <span style="color:var(--text3);font-size:11px">'+pct+'%</span></span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHomeLoansCard() {
+  var el = document.getElementById('home-loans-summary');
+  if(!el) return;
+  if(!loans.length) { el.innerHTML = '<div class="empty" style="padding:10px 0">등록된 대출이 없어요</div>'; return; }
+  var totalBal = loans.reduce(function(s,l){return s+l.balance;},0);
+  var totalMonthly = loans.reduce(function(s,l){return s+(l.monthly||0);},0);
+  var html = '<div style="font-size:22px;font-weight:600;font-family:monospace;color:var(--red);margin-bottom:10px">'+fmt(totalBal)+'</div><div style="font-size:12px;color:var(--text2);margin-bottom:8px">월 상환 합계 <span style="color:var(--amber);font-weight:600">'+fmt(totalMonthly)+'</span></div>';
+  loans.slice(0,3).forEach(function(l){
+    html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-top:1px solid var(--border)"><span>'+l.name+'</span><span style="font-weight:600;font-family:monospace;color:var(--red)">'+fmt(l.balance)+'</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHomeSavingsCard() {
+  var el = document.getElementById('home-savings-summary');
+  if(!el) return;
+  if(!savings.length) { el.innerHTML = '<div class="empty" style="padding:10px 0">등록된 예적금이 없어요</div>'; return; }
+  var today = new Date(); today.setHours(0,0,0,0);
+  var sorted = savings.filter(function(s){return s.due;}).map(function(s){
+    var due = new Date(s.due); due.setHours(0,0,0,0);
+    return {name:s.name, amt:s.amt, due:s.due, diff:Math.round((due-today)/(1000*60*60*24))};
+  }).sort(function(a,b){return a.diff-b.diff;}).slice(0,4);
+  if(!sorted.length) { el.innerHTML = '<div class="empty" style="padding:10px 0">만기일 설정된 상품이 없어요</div>'; return; }
+  var html = '';
+  sorted.forEach(function(s){
+    var ddayColor = s.diff<=30?'var(--red)':s.diff<=90?'var(--amber)':'var(--green)';
+    var ddayText = s.diff>0?'D-'+s.diff:(s.diff===0?'오늘':'D+'+Math.abs(s.diff));
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:500">'+s.name+'</div><div style="font-size:11px;color:var(--text3);font-family:monospace">'+fmt(s.amt)+'</div></div><span style="font-size:12px;font-weight:600;color:'+ddayColor+'">'+ddayText+'</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHomeSpendsCard() {
+  var el = document.getElementById('home-spends-summary');
+  if(!el) return;
+  if(!spends.length) { el.innerHTML = '<div class="empty" style="padding:10px 0">최근 지출이 없어요</div>'; return; }
+  var html = '';
+  spends.slice(0,5).forEach(function(s){
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px">'+(s.memo||s.cat)+'</div><div style="font-size:11px;color:var(--text3)">'+s.date+' · '+s.cat+'</div></div><span style="font-size:13px;font-weight:600;font-family:monospace;color:var(--red)">-'+fmt(s.amt)+'</span></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHomeBudgetCard() {
+  var el = document.getElementById('home-budget-summary');
+  if(!el) return;
+  var budgets2 = JSON.parse(localStorage.getItem('budgets')||'{}');
+  if(!Object.keys(budgets2).length) { el.innerHTML = '<div class="empty" style="padding:10px 0">예산을 설정해보세요</div>'; return; }
+  var periodSpends = currentPayPeriodSpends();
+  var catSpend = {};
+  periodSpends.forEach(function(s){ catSpend[s.cat] = (catSpend[s.cat]||0) + s.amt; });
+  var html = '';
+  Object.entries(budgets2).forEach(function(entry){
+    var cat=entry[0], budget=entry[1];
+    var spent = catSpend[cat]||0;
+    var pct = Math.min(100, Math.round(spent/budget*100));
+    var color = pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+    html += '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+cat+'</span><span><span style="color:'+color+';font-weight:600">'+fmt(spent)+'</span> / '+fmt(budget)+'</span></div><div style="height:5px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+'"></div></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderHomeWeddingFundCard() {
+  var el = document.getElementById('home-wedding-fund-summary');
+  if(!el) return;
+  var goal = parseInt(localStorage.getItem('wdGoal')||'15000000');
+  var saved = parseInt(localStorage.getItem('wdSaved')||'0');
+  var monthly = parseInt(localStorage.getItem('wdMonthly')||'700000');
+  var wDate = localStorage.getItem('weddingDate')||'2027-09-04';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var wd = new Date(wDate); wd.setHours(0,0,0,0);
+  var months = Math.max(0, Math.round((wd-today)/(1000*60*60*24*30)));
+  var expected = saved + monthly*months;
+  var pct = Math.min(100, Math.round(expected/goal*100));
+  var color = pct>=100?'var(--green)':pct>=70?'var(--amber)':'var(--red)';
+  el.innerHTML = '<div style="text-align:center;padding:10px 0"><div style="font-size:28px;font-weight:600;color:'+color+';font-family:monospace">'+pct+'%</div><div style="font-size:12px;color:var(--text3);margin-top:4px">목표 '+fmt(goal)+' 중 예상 '+fmt(expected)+'</div><div class="prog-track" style="margin-top:10px"><div class="prog-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>';
+}
+
+function renderHomeNetworthCard() {
+  var el = document.getElementById('home-networth-summary');
+  if(!el) return;
+  var snaps = JSON.parse(localStorage.getItem('networthSnaps')||'[]');
+  if(snaps.length < 2) {
+    var totalAssets = assets.reduce(function(s,a){return s+a.amt;},0);
+    var totalLoans = loans.reduce(function(s,l){return s+l.balance;},0);
+    var cur = totalAssets - totalLoans;
+    el.innerHTML = '<div style="text-align:center;padding:10px 0"><div style="font-size:24px;font-weight:600;color:'+(cur>=0?'var(--green)':'var(--red)')+';font-family:monospace">'+fmt(cur)+'</div><div style="font-size:11px;color:var(--text3);margin-top:6px">순자산 탭에서 매월 기록하면 변화를 볼 수 있어요</div></div>';
+    return;
+  }
+  var latest = snaps[snaps.length-1];
+  var prev = snaps[snaps.length-2];
+  var change = latest.net - prev.net;
+  var html = '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px"><div><div style="font-size:11px;color:var(--text3)">현재</div><div style="font-size:20px;font-weight:600;font-family:monospace;color:'+(latest.net>=0?'var(--green)':'var(--red)')+'">'+fmt(latest.net)+'</div></div><div style="text-align:right"><div style="font-size:11px;color:var(--text3)">전월 대비</div><div style="font-size:14px;font-weight:600;font-family:monospace;color:'+(change>=0?'var(--green)':'var(--red)')+'">'+(change>=0?'▲':'▼')+fmt(Math.abs(change))+'</div></div></div>';
+  // 최근 4개 미니 차트
+  var recent4 = snaps.slice(-4);
+  var max = Math.max.apply(null, recent4.map(function(s){return s.net;}));
+  var min = Math.min.apply(null, recent4.map(function(s){return s.net;}));
+  var range = max-min || 1;
+  html += '<div style="display:flex;gap:4px;height:40px;align-items:flex-end">';
+  recent4.forEach(function(s){
+    var h = Math.round((s.net-min)/range*100);
+    html += '<div style="flex:1;background:var(--green);opacity:0.6;height:'+Math.max(10,h)+'%;border-radius:3px 3px 0 0"></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 
