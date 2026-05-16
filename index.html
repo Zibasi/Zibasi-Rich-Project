@@ -1946,14 +1946,11 @@ window.addAsset = async () => {
   var memo = document.getElementById('as-memo').value.trim();
   if(!name || !amt) return alert('이름과 금액을 입력해주세요.');
   var data = {name, cat, amt, memo, createdAt: Date.now()};
-  var ref  = await addDoc(col('assets'), data);
-  assets.unshift({id: ref.id, ...data});
+  await addDoc(col('assets'), data);
   playBeep();
   document.getElementById('as-name').value = '';
   document.getElementById('as-amt').value  = '';
   document.getElementById('as-memo').value = '';
-  renderAssets();
-  renderHome();
 };
 
 window.delAsset = async (id) => {
