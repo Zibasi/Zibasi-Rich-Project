@@ -910,23 +910,23 @@
         </div>
       </div>
 
-      <!-- 홈 카드 순서 -->
+      <!-- 통합 화면 관리 -->
       <div class="card">
-        <div class="card-label">홈 카드 관리</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 홈에서 숨겨져요 · 드래그로 순서 변경</div>
-        <div id="home-card-sort-list"></div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" style="flex:2" onclick="saveHomeCardOrder()">저장</button>
-          <button onclick="resetHomeCards()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit">초기화</button>
-        </div>
-      </div>
+        <div class="card-label">화면 구성 관리</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 숨겨져요 · 드래그로 순서 변경</div>
 
-      <!-- 탭 관리 -->
-      <div class="card">
-        <div class="card-label">탭 관리</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">체크 해제하면 탭이 숨겨져요 · 드래그로 순서 변경</div>
-        <div id="tab-sort-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        <button class="btn btn-primary" style="margin-top:16px" onclick="saveTabOrder()">저장</button>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">홈 카드</div>
+        <div id="home-card-sort-list" style="margin-bottom:16px"></div>
+
+        <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
+
+        <div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">탭</div>
+        <div id="tab-sort-list"></div>
+
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn btn-primary" style="flex:2" onclick="saveAllLayout()">저장</button>
+          <button onclick="resetAllLayout()" style="flex:1;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit">초기화</button>
+        </div>
       </div>
 
       <!-- 데이터 관리 -->
@@ -2336,6 +2336,32 @@ window.resetAppSettings = function() {
   location.reload();
 };
 
+// 통합 저장/초기화
+window.saveAllLayout = function() {
+  localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
+  localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
+  localStorage.setItem('homeCardOrder', JSON.stringify(homeCardOrder));
+  renderNav();
+  applyHomeCardOrder();
+  loadSettings();
+  alert('저장됐어요! ✓');
+};
+
+window.resetAllLayout = function() {
+  if(!confirm('화면 구성을 초기화할까요?')) return;
+  tabOrder = DEFAULT_TABS.map(function(t){return t.id;});
+  hiddenTabs = [];
+  homeCardOrder = HOME_CARDS.map(function(c){return c.id;});
+  localStorage.removeItem('tabOrder');
+  localStorage.removeItem('hiddenTabs');
+  localStorage.removeItem('homeCardOrder');
+  localStorage.removeItem('hiddenHomeCards');
+  renderNav();
+  applyHomeCardOrder();
+  renderHomeCardSortList();
+  renderTabSortList();
+};
+
 window.saveTabOrder = function() {
   localStorage.setItem('tabOrder', JSON.stringify(tabOrder));
   localStorage.setItem('hiddenTabs', JSON.stringify(hiddenTabs));
@@ -2444,8 +2470,8 @@ window.goPage = (id,btn) => {
   btn.classList.add('active');
   if(id==='cashflow') renderCashflow();
   if(id==='settings') {
-    renderTabSortList();
     renderHomeCardSortList();
+    renderTabSortList();
     renderFixedExpenses();
   }
   if(id==='assets') renderAssets();
