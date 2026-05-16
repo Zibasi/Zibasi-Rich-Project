@@ -1336,18 +1336,18 @@ function renderFixedExpenses() {
 
 // ── 홈 카드 순서 ──
 var HOME_CARDS = [
-  {id:'exchange',      label:'💱 환율',           default:true},
-  {id:'stats',         label:'📊 순자산 / D-day',  default:true},
-  {id:'cashflow',      label:'💰 이달 수지',       default:true},
-  {id:'invest-goal',   label:'🎯 투자 목표',       default:true},
-  {id:'recent',        label:'📈 최근 투자 기록',  default:true},
-  {id:'assets',        label:'🏦 자산 요약',       default:false},
-  {id:'loans',         label:'💳 대출 요약',       default:false},
-  {id:'savings',       label:'⏰ 예적금 만기',     default:false},
-  {id:'spends',        label:'🛒 최근 지출',       default:false},
-  {id:'budget',        label:'📋 예산 현황',       default:false},
-  {id:'wedding-fund',  label:'💍 결혼자금 달성률', default:false},
-  {id:'networth',      label:'📉 순자산 변화',     default:false},
+  {id:'hc-exchange',     label:'💱 환율',           default:true},
+  {id:'hc-stats',        label:'📊 순자산 / D-day',  default:true},
+  {id:'hc-cashflow',     label:'💰 이달 수지',       default:true},
+  {id:'hc-invest-goal',  label:'🎯 투자 목표',       default:true},
+  {id:'hc-recent',       label:'📈 최근 투자 기록',  default:true},
+  {id:'hc-assets',       label:'🏦 자산 요약',       default:false},
+  {id:'hc-loans',        label:'💳 대출 요약',       default:false},
+  {id:'hc-savings',      label:'⏰ 예적금 만기',     default:false},
+  {id:'hc-spends',       label:'🛒 최근 지출',       default:false},
+  {id:'hc-budget',       label:'📋 예산 현황',       default:false},
+  {id:'hc-wedding-fund', label:'💍 결혼자금 달성률', default:false},
+  {id:'hc-networth',     label:'📉 순자산 변화',     default:false},
 ];
 var homeCardOrder = JSON.parse(localStorage.getItem('homeCardOrder') || 'null') || HOME_CARDS.map(function(c){return c.id;});
 // 기본 숨김 카드 - default:false인 것들
@@ -1421,14 +1421,17 @@ function createSortableList(opts) {
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       dragClass: 'sortable-drag',
-      forceFallback: true,        // 모바일 호환성 향상
+      forceFallback: true,
       fallbackTolerance: 5,
       onEnd: function(evt) {
         var from = evt.oldIndex;
         var to = evt.newIndex;
         if(from === to) return;
+        // opts.orderArr 업데이트
         var moved = opts.orderArr.splice(from, 1)[0];
         opts.orderArr.splice(to, 0, moved);
+        // onChange 콜백으로 상위 상태(UNIFIED_ITEMS 등) 동기화
+        if(opts.onChange) opts.onChange(opts.orderArr);
       }
     });
   }
@@ -1444,7 +1447,24 @@ function initUnifiedOrder() {
   if(UNIFIED_ITEMS) return;
   var saved = JSON.parse(localStorage.getItem('unifiedOrder') || 'null');
   if(saved && saved.length) {
-    // 신규 항목(DEFAULT_TABS/HOME_CARDS에 있으나 saved에 없는 것) 추가
+    // 구버전 마이그레이션: hc- 없는 카드 id 제거 (중복 방지)
+    var validCardIds = HOME_CARDS.map(function(c){return c.id;}); // hc-로 시작
+    var validTabIds  = DEFAULT_TABS.map(function(t){return t.id;});
+    saved = saved.filter(function(x){
+      if(x.type === 'card') return validCardIds.includes(x.id);
+      if(x.type === 'tab')  return validTabIds.includes(x.id) && x.id !== 'home';
+      // type 없는 구버전: tab인지 card인지 판별
+      if(validCardIds.includes(x.id)) { x.type='card'; return true; }
+      if(validTabIds.includes(x.id) && x.id !== 'home') { x.type='tab'; return true; }
+      return false;
+    });
+    // 중복 id 제거
+    var seen = {};
+    saved = saved.filter(function(x){
+      if(seen[x.id]) return false;
+      seen[x.id] = true; return true;
+    });
+    // 신규 항목 추가
     var savedIds = saved.map(function(x){return x.id;});
     HOME_CARDS.forEach(function(c){
       if(!savedIds.includes(c.id)) saved.push({id:c.id, type:'card', hidden:!c.default});
@@ -1452,9 +1472,8 @@ function initUnifiedOrder() {
     DEFAULT_TABS.forEach(function(t){
       if(!savedIds.includes(t.id) && t.id !== 'home') saved.push({id:t.id, type:'tab', hidden:false});
     });
-    // home 탭 제거
-    saved = saved.filter(function(x){return x.id !== 'home';});
     UNIFIED_ITEMS = saved;
+    localStorage.setItem('unifiedOrder', JSON.stringify(UNIFIED_ITEMS));
     return;
   }
   // 최초 - 홈카드 먼저, 탭 나중
@@ -1509,16 +1528,24 @@ function renderUnifiedSortList() {
     },
     onHide: function(id) {
       var item = UNIFIED_ITEMS.find(function(x){return x.id===id;});
-      if(item) item.hidden = !item.hidden;
+      if(item) {
+        item.hidden = !item.hidden;
+        // 즉시 시각 반영 (홈카드/탭)
+        if(item.type === 'card') applyHomeCardOrder();
+        else renderNav();
+      }
     },
-    onChange: function() {
-      // Sortable이 DOM 순서 바꾼 후 orderArr도 바뀜 → UNIFIED_ITEMS 순서 동기화
-      var newIds = Array.from(el.children).map(function(c){return c.dataset.id;}).filter(Boolean);
-      var reordered = newIds.map(function(id){
+    onChange: function(newOrderArr) {
+      if(!newOrderArr) return;
+      var reordered = newOrderArr.map(function(id){
         return UNIFIED_ITEMS.find(function(x){return x.id===id;});
       }).filter(Boolean);
       UNIFIED_ITEMS.length = 0;
       reordered.forEach(function(x){UNIFIED_ITEMS.push(x);});
+      // 드래그 즉시 자동저장
+      saveUnifiedOrder();
+      renderNav();
+      applyHomeCardOrder();
     }
   });
 }
@@ -1549,18 +1576,18 @@ function applyHomeCardOrder() {
   var hiddenCards = JSON.parse(localStorage.getItem('hiddenHomeCards') || '[]');
 
   var cardMap = {
-    'exchange':      document.getElementById('home-ex-row'),
-    'stats':         document.getElementById('home-stats-grid'),
-    'cashflow':      document.getElementById('home-cashflow-card'),
-    'invest-goal':   document.getElementById('home-invest-goal-card'),
-    'recent':        document.getElementById('home-recent-card'),
-    'assets':        document.getElementById('home-assets-card'),
-    'loans':         document.getElementById('home-loans-card'),
-    'savings':       document.getElementById('home-savings-card'),
-    'spends':        document.getElementById('home-spends-card'),
-    'budget':        document.getElementById('home-budget-card'),
-    'wedding-fund':  document.getElementById('home-wedding-fund-card'),
-    'networth':      document.getElementById('home-networth-card'),
+    'hc-exchange':     document.getElementById('home-ex-row'),
+    'hc-stats':        document.getElementById('home-stats-grid'),
+    'hc-cashflow':     document.getElementById('home-cashflow-card'),
+    'hc-invest-goal':  document.getElementById('home-invest-goal-card'),
+    'hc-recent':       document.getElementById('home-recent-card'),
+    'hc-assets':       document.getElementById('home-assets-card'),
+    'hc-loans':        document.getElementById('home-loans-card'),
+    'hc-savings':      document.getElementById('home-savings-card'),
+    'hc-spends':       document.getElementById('home-spends-card'),
+    'hc-budget':       document.getElementById('home-budget-card'),
+    'hc-wedding-fund': document.getElementById('home-wedding-fund-card'),
+    'hc-networth':     document.getElementById('home-networth-card'),
   };
 
   // 숨김 처리
@@ -1577,13 +1604,13 @@ function applyHomeCardOrder() {
   });
 
   // 표시된 카드 데이터 렌더링
-  if(!hiddenCards.includes('assets'))       renderHomeAssetsCard();
-  if(!hiddenCards.includes('loans'))        renderHomeLoansCard();
-  if(!hiddenCards.includes('savings'))      renderHomeSavingsCard();
-  if(!hiddenCards.includes('spends'))       renderHomeSpendsCard();
-  if(!hiddenCards.includes('budget'))       renderHomeBudgetCard();
-  if(!hiddenCards.includes('wedding-fund')) renderHomeWeddingFundCard();
-  if(!hiddenCards.includes('networth'))     renderHomeNetworthCard();
+  if(!hiddenCards.includes('hc-assets'))       renderHomeAssetsCard();
+  if(!hiddenCards.includes('hc-loans'))        renderHomeLoansCard();
+  if(!hiddenCards.includes('hc-savings'))      renderHomeSavingsCard();
+  if(!hiddenCards.includes('hc-spends'))       renderHomeSpendsCard();
+  if(!hiddenCards.includes('hc-budget'))       renderHomeBudgetCard();
+  if(!hiddenCards.includes('hc-wedding-fund')) renderHomeWeddingFundCard();
+  if(!hiddenCards.includes('hc-networth'))     renderHomeNetworthCard();
 }
 
 // ── 신규 홈 카드 렌더 함수들 ──
