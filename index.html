@@ -1032,7 +1032,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyC61cmUgI93VZ6pF2ICV3vpxPb8ne0n5hQ",
@@ -1045,6 +1045,49 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 let uid = null;
+
+// ── 사용자 설정 Firebase 동기화 ──
+var SYNCED_KEYS = ['fixedExpenses','budgets','financeSettings','weddingDate','wdGoal','wdSaved','wdMonthly','cfPayday','networthSnaps'];
+var _saveSettingsTimer = null;
+function syncSettingsSave() {
+  if(!uid) return;
+  clearTimeout(_saveSettingsTimer);
+  _saveSettingsTimer = setTimeout(async function(){
+    var data = {};
+    SYNCED_KEYS.forEach(function(k){
+      var v = localStorage.getItem(k);
+      if(v !== null) data[k] = v;
+    });
+    try { await setDoc(doc(db,'users',uid,'settings','main'), data); } catch(e){ console.error('settings save',e); }
+  }, 400);
+}
+async function loadSettingsFromFirebase() {
+  if(!uid) return;
+  try {
+    var snap = await getDoc(doc(db,'users',uid,'settings','main'));
+    if(snap.exists()) {
+      var data = snap.data();
+      SYNCED_KEYS.forEach(function(k){
+        if(data[k] !== undefined && data[k] !== null) localStorage.setItem(k, data[k]);
+        else localStorage.removeItem(k);
+      });
+    } else {
+      // Firebase에 없으면: localStorage 기존 데이터를 Firebase로 마이그레이션 (있는 경우)
+      var hasAny = SYNCED_KEYS.some(function(k){ return localStorage.getItem(k) !== null; });
+      if(hasAny) {
+        var data = {};
+        SYNCED_KEYS.forEach(function(k){
+          var v = localStorage.getItem(k);
+          if(v !== null) data[k] = v;
+        });
+        try { await setDoc(doc(db,'users',uid,'settings','main'), data); } catch(e){}
+      } else {
+        // 신규 가입자: 기존 localStorage가 다른 사용자 데이터일 수 있음 → 깨끗하게
+        SYNCED_KEYS.forEach(function(k){ localStorage.removeItem(k); });
+      }
+    }
+  } catch(e){ console.error('settings load',e); }
+}
 
 const catColors = {'식비':'#1a7a58','교통':'#1e5fa8','쇼핑':'#b45309','카페':'#9333ea','공과금':'#6b6a64','문화/여가':'#c0392b','기타':'#9e9d97'};
 const tagClass = {etf:'tag-etf',basic:'tag-basic',tax:'tag-tax',word:'tag-word',etc:'tag-etc'};
@@ -1223,10 +1266,17 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('auth-screen').style.display='none';
     document.getElementById('app-screen').style.display='block';
     setSyncStatus('syncing');
+    // 사용자 설정 Firebase에서 먼저 로드 (마이그레이션 포함)
+    await loadSettingsFromFirebase();
+    // 설정 반영 후 화면 다시 그리기
+    loadSettings();
+    renderNav();
+    applyHomeCardOrder();
+    renderFixedExpenses();
+    if(typeof renderBudgetList==='function') renderBudgetList();
+    if(typeof renderBudgetStatus==='function') renderBudgetStatus();
     startRealtimeListeners();
-    // 로그인 후 환율 자동 로드
     setTimeout(fetchExchangeRates, 500);
-    // 로그인 후 수지 초기 렌더 (급여일 기준 라벨 적용)
     setTimeout(function(){ if(typeof renderCashflow==='function') renderCashflow(); }, 300);
   } else {
     unsubs.forEach(function(u){try{u();}catch(e){}});
@@ -1300,7 +1350,7 @@ window.addFixedExpense = function() {
   var amt  = parseInt((document.getElementById('fe-amt').value||'0').replace(/[^0-9]/g,''))||0;
   if(!name||!amt) return alert('항목명과 금액을 입력해주세요.');
   fixedExpenses.push({id: Date.now()+'', name, amt});
-  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses)); syncSettingsSave();
   document.getElementById('fe-name').value = '';
   document.getElementById('fe-amt').value  = '';
   renderFixedExpenses();
@@ -1309,7 +1359,7 @@ window.addFixedExpense = function() {
 
 window.delFixedExpense = function(id) {
   fixedExpenses = fixedExpenses.filter(f=>f.id!==id);
-  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses));
+  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses)); syncSettingsSave();
   renderFixedExpenses();
   renderHome();
 };
@@ -2452,7 +2502,7 @@ window.saveFinanceSettings = function() {
   var income = parseInt((document.getElementById('set-income').value||'0').replace(/[^0-9]/g,''))||0;
   var fixed  = parseInt((document.getElementById('set-fixed').value||'0').replace(/[^0-9]/g,''))||0;
   var pocket = parseInt((document.getElementById('set-pocket').value||'0').replace(/[^0-9]/g,''))||0;
-  localStorage.setItem('financeSettings', JSON.stringify({income,fixed,pocket}));
+  localStorage.setItem('financeSettings', JSON.stringify({income,fixed,pocket})); syncSettingsSave();
   var cfEl = document.getElementById('cf-income');
   if(cfEl && income) { cfEl.value = income.toLocaleString(); renderCashflow(); }
   var msg = document.getElementById('set-finance-msg');
@@ -2463,7 +2513,7 @@ window.saveFinanceSettings = function() {
 window.saveWeddingDate = function() {
   var date = document.getElementById('set-wedding-date').value;
   if(!date) return;
-  localStorage.setItem('weddingDate', date);
+  localStorage.setItem('weddingDate', date); syncSettingsSave();
   var wdEl = document.getElementById('wd-date');
   if(wdEl) wdEl.value = date;
   var rmEl = document.getElementById('rm-wedding');
@@ -2698,10 +2748,10 @@ window.calcWedding = () => {
   }
   document.getElementById('wd-advice').textContent = advice;
   // 입력값 localStorage에 저장
-  localStorage.setItem('weddingDate', dateVal);
-  localStorage.setItem('wdGoal', goal);
-  localStorage.setItem('wdSaved', saved);
-  localStorage.setItem('wdMonthly', monthly);
+  localStorage.setItem('weddingDate', dateVal); syncSettingsSave();
+  localStorage.setItem('wdGoal', goal); syncSettingsSave();
+  localStorage.setItem('wdSaved', saved); syncSettingsSave();
+  localStorage.setItem('wdMonthly', monthly); syncSettingsSave();
 };
 
 // ── 연금 납입 현황 ──
@@ -2748,7 +2798,7 @@ window.addBudget = function() {
   var amt = parseInt((document.getElementById('budget-amt').value||'0').replace(/[^0-9]/g,''))||0;
   if(!amt) return alert('금액을 입력해주세요.');
   budgets[cat] = amt;
-  localStorage.setItem('budgets', JSON.stringify(budgets));
+  localStorage.setItem('budgets', JSON.stringify(budgets)); syncSettingsSave();
   document.getElementById('budget-amt').value = '';
   renderBudgetList();
   renderBudgetStatus();
@@ -2766,7 +2816,7 @@ function renderBudgetList() {
     row.innerHTML = '<span style="font-size:13px">'+cat+'</span><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;font-weight:600">'+fmt(amt)+'</span></div>';
     var delBtn = document.createElement('button');
     delBtn.textContent = '×'; delBtn.style.cssText = 'background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer';
-    delBtn.addEventListener('click', function() { delete budgets[cat]; localStorage.setItem('budgets',JSON.stringify(budgets)); renderBudgetList(); renderBudgetStatus(); });
+    delBtn.addEventListener('click', function() { delete budgets[cat]; localStorage.setItem('budgets',JSON.stringify(budgets)); syncSettingsSave(); renderBudgetList(); renderBudgetStatus(); });
     row.querySelector('div').appendChild(delBtn);
     el.appendChild(row);
   });
@@ -2870,14 +2920,14 @@ window.saveNetworthSnap = function() {
   if(idx>-1) networthSnaps[idx] = {date:today, net:net, assets:totalAssets, loans:totalLoans};
   else networthSnaps.push({date:today, net:net, assets:totalAssets, loans:totalLoans});
   networthSnaps.sort(function(a,b){return a.date.localeCompare(b.date);});
-  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps));
+  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps)); syncSettingsSave();
   alert('이달 순자산이 기록됐어요! ✓');
   renderNetworth();
 };
 
 window.delNetworthSnap = function(idx) {
   networthSnaps.splice(idx,1);
-  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps));
+  localStorage.setItem('networthSnaps', JSON.stringify(networthSnaps)); syncSettingsSave();
   renderNetworth();
 };
 
@@ -3014,7 +3064,7 @@ var cfPeriodOffset = 0; // 기간 이동 (0=현재)
 
 window.savePayday = function() {
   cfPayday = parseInt(document.getElementById('cf-payday').value);
-  localStorage.setItem('cfPayday', cfPayday);
+  localStorage.setItem('cfPayday', cfPayday); syncSettingsSave();
   cfPeriodOffset = 0;
   spendPeriodOffset = 0;
   renderCashflow();
@@ -3092,18 +3142,8 @@ var _initPeriod = getPayPeriod(0);
 loadSettings();
 // 2. 네비 렌더 (hiddenTabs, tabOrder 반영)
 renderNav();
-// 3. 결혼일 기본값 - localStorage에 없을 때만 세팅
-if(!localStorage.getItem('weddingDate')) {
-  document.getElementById('wd-date').value='2027-09-04';
-  document.getElementById('wd-goal').value='15,000,000';
-  document.getElementById('wd-saved').value='300,000';
-  document.getElementById('wd-monthly').value='700,000';
-}
-// 4. 수입 기본값 - localStorage에 없을 때만 세팅
-if(!localStorage.getItem('financeSettings')) {
-  var cfEl = document.getElementById('cf-income');
-  if(cfEl && !cfEl.value) cfEl.value = '2,200,000';
-}
+// 결혼일 기본값 제거됨 - 신규 사용자는 빈 상태로 시작
+// 수입 기본값 제거됨 - 신규 사용자는 빈 상태로 시작
 // 5. 수지 월 초기화
 </script>
 </body>
