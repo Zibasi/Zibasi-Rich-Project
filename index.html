@@ -917,8 +917,9 @@
         <div class="card-label">기본 재무 설정</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:14px">앱 전체에 기본값으로 적용돼요</div>
         <div class="form-row"><label>월 수입 (원)</label><input type="text" inputmode="numeric" id="set-income" placeholder="2,200,000" oninput="formatComma(this)" /></div>
-        <div class="form-row"><label>월 고정지출 (원)</label><input type="text" inputmode="numeric" id="set-fixed" placeholder="1,200,000" oninput="formatComma(this)" /></div>
         <div class="form-row"><label>월 용돈 (원)</label><input type="text" inputmode="numeric" id="set-pocket" placeholder="300,000" oninput="formatComma(this)" /></div>
+        <div style="font-size:12px;color:var(--text2);background:var(--bg);padding:8px 10px;border-radius:var(--radius-sm);margin-bottom:12px">💡 월 고정지출은 아래 <b>고정지출 항목 관리</b>에서 항목별로 추가하세요. 합계가 자동으로 홈에 반영돼요.</div>
+        <input type="hidden" id="set-fixed" value="0" />
         <button class="btn btn-primary" onclick="saveFinanceSettings()">저장</button>
         <div id="set-finance-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✓ 저장됐어요</div>
       </div>
@@ -1364,6 +1365,23 @@ window.delFixedExpense = function(id) {
   renderHome();
 };
 
+var editingFeId = null;
+window.editFixedExpense = function(id) { editingFeId = id; renderFixedExpenses(); };
+window.cancelFeEdit = function() { editingFeId = null; renderFixedExpenses(); };
+window.saveFeEdit = function(id) {
+  var nameEl = document.getElementById('fe-edit-name-'+id);
+  var amtEl = document.getElementById('fe-edit-amt-'+id);
+  var name = nameEl.value.trim();
+  var amt = parseInt((amtEl.value||'0').replace(/[^0-9]/g,''))||0;
+  if(!name||!amt) return alert('항목명과 금액을 입력해주세요.');
+  var idx = fixedExpenses.findIndex(f=>f.id===id);
+  if(idx>-1) { fixedExpenses[idx].name=name; fixedExpenses[idx].amt=amt; }
+  localStorage.setItem('fixedExpenses', JSON.stringify(fixedExpenses)); syncSettingsSave();
+  editingFeId = null;
+  renderFixedExpenses();
+  renderHome();
+};
+
 function renderFixedExpenses() {
   var el = document.getElementById('fixed-expense-list');
   if(!el) return;
@@ -1372,21 +1390,28 @@ function renderFixedExpenses() {
     el.innerHTML = '';
     fixedExpenses.forEach(function(f) {
       var row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)';
-      var nameSpan = document.createElement('span');
-      nameSpan.style.fontSize = '13px';
-      nameSpan.textContent = f.name;
-      var right = document.createElement('div');
-      right.style.cssText = 'display:flex;align-items:center;gap:10px';
-      var amtSpan = document.createElement('span');
-      amtSpan.style.fontSize="13px"; amtSpan.style.fontWeight="600"; amtSpan.style.fontFamily="DM Mono,monospace";
-      amtSpan.textContent = fmt(f.amt);
-      var delBtn = document.createElement('button');
-      delBtn.textContent = '×';
-      delBtn.style.cssText = 'background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px';
-      delBtn.addEventListener('click', function() { window.delFixedExpense(f.id); });
-      right.appendChild(amtSpan); right.appendChild(delBtn);
-      row.appendChild(nameSpan); row.appendChild(right);
+      if(editingFeId === f.id) {
+        // 편집 모드
+        row.style.cssText = 'display:flex;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap';
+        row.innerHTML = '<input type="text" id="fe-edit-name-'+f.id+'" value="'+f.name.replace(/"/g,'&quot;')+'" style="flex:1;min-width:100px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit" />' +
+          '<input type="text" inputmode="numeric" id="fe-edit-amt-'+f.id+'" value="'+f.amt.toLocaleString()+'" oninput="formatComma(this)" style="width:100px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:monospace" />' +
+          '<button onclick="saveFeEdit(\''+f.id+'\')" style="padding:7px 11px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;font-family:inherit">저장</button>' +
+          '<button onclick="cancelFeEdit()" style="padding:7px 11px;background:none;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;font-family:inherit">취소</button>' +
+          '<button onclick="delFixedExpense(\''+f.id+'\')" style="padding:7px 9px;background:none;color:var(--red);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;font-family:inherit">삭제</button>';
+      } else {
+        // 표시 모드 (탭하면 편집)
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:9px 6px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:4px';
+        row.onmouseover = function(){ this.style.background='var(--bg)'; };
+        row.onmouseout = function(){ this.style.background='transparent'; };
+        row.onclick = function(){ window.editFixedExpense(f.id); };
+        var nameSpan = document.createElement('span');
+        nameSpan.style.fontSize = '13px';
+        nameSpan.textContent = f.name;
+        var amtSpan = document.createElement('span');
+        amtSpan.style.cssText = 'font-size:13px;font-weight:600;font-family:DM Mono,monospace';
+        amtSpan.textContent = fmt(f.amt);
+        row.appendChild(nameSpan); row.appendChild(amtSpan);
+      }
       el.appendChild(row);
     });
   }
@@ -2373,10 +2398,9 @@ function renderHome() {
   // 이달 수지 (수입 - 고정지출 - 변동지출)
   const fs2 = JSON.parse(localStorage.getItem('financeSettings')||'null');
   const income = (fs2&&fs2.income) ? fs2.income : (getVal('cf-income')||2200000);
-  // 고정지출: 항목 합계 우선, 없으면 설정값 사용
+  // 고정지출: 항목 관리에서 추가된 항목들의 합계
   const feItems = JSON.parse(localStorage.getItem('fixedExpenses')||'[]');
-  const fixedFromItems = feItems.reduce((s,f)=>s+f.amt, 0);
-  const fixed = fixedFromItems > 0 ? fixedFromItems : ((fs2&&fs2.fixed) ? fs2.fixed : 0);
+  const fixed = feItems.reduce((s,f)=>s+f.amt, 0);
   // 급여일 기준 수지 계산
   const surplus = income - fixed - mSpend;
   // 급여일 기간 라벨 표시
