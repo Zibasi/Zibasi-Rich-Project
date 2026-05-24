@@ -2223,10 +2223,10 @@ function renderSpends() {
   const total = list.reduce((s,x) => s+x.amt, 0);
   const tr = document.getElementById('spend-total-row');
   const el = document.getElementById('spend-list');
-  const labelEl = document.getElementById('spend-filter-label');
+  const catLabelEl = document.getElementById('spend-filter-label');
 
-  if(filterCat) labelEl.textContent = '· '+filterCat;
-  else labelEl.textContent = '';
+  if(filterCat) catLabelEl.textContent = '· '+filterCat;
+  else catLabelEl.textContent = '';
 
   if(!list.length) {
     tr.style.display='none';
