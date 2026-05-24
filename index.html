@@ -612,8 +612,12 @@
       </div>
       <div class="card">
         <div class="card-label">지출 내역</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:6px">
+          <button onclick="moveSpendPeriod(-1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:18px;cursor:pointer;color:var(--text2)">‹</button>
+          <span id="sp-period-label" style="font-size:13px;font-weight:600;color:var(--text);flex:1;text-align:center"></span>
+          <button onclick="moveSpendPeriod(1)" id="sp-period-next" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:18px;cursor:pointer;color:var(--text2)">›</button>
+        </div>
         <div class="filter-bar">
-          <input type="month" id="sp-filter-month" onchange="renderSpends()" />
           <select id="sp-filter-cat" onchange="renderSpends()">
             <option value="">전체 카테고리</option>
             <option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>공과금</option><option>문화/여가</option><option>기타</option>
@@ -2189,12 +2193,26 @@ window.delSpend = async (id) => {
   await deleteDoc(doc(db,'users',uid,'spends',id));
   spends=spends.filter(x=>x.id!==id); renderSpends(); renderHome();
 };
+var spendPeriodOffset = 0;
+window.moveSpendPeriod = function(dir) {
+  var nextBtn = document.getElementById('sp-period-next');
+  if(dir > 0 && spendPeriodOffset >= 0) return;
+  spendPeriodOffset += dir;
+  if(nextBtn) nextBtn.style.opacity = spendPeriodOffset >= 0 ? '0.3' : '1';
+  renderSpends();
+};
 function renderSpends() {
-  const filterMonth = document.getElementById('sp-filter-month').value || thisMonth();
+  var period = getPayPeriod(spendPeriodOffset);
+  var fmt = function(d){ return (d.getMonth()+1)+'월 '+d.getDate()+'일'; };
+  var labelEl = document.getElementById('sp-period-label');
+  if(labelEl) labelEl.textContent = fmt(period.start)+' ~ '+fmt(period.end);
+  var nextBtn = document.getElementById('sp-period-next');
+  if(nextBtn) nextBtn.style.opacity = spendPeriodOffset >= 0 ? '0.3' : '1';
+
   const filterCat = document.getElementById('sp-filter-cat').value;
   const sortMode = document.getElementById('sp-filter-sort').value;
 
-  let list = spends.filter(s => s.date.slice(0,7) === filterMonth);
+  let list = spends.filter(s => dateInPeriod(s.date, period.start, period.end));
   if(filterCat) list = list.filter(s => s.cat === filterCat);
 
   if(sortMode === 'date-desc') list.sort((a,b) => b.date.localeCompare(a.date));
@@ -3066,7 +3084,7 @@ document.getElementById('inv-month').value=now.toISOString().slice(0,7);
 document.getElementById('sp-date').value=todayStr();
 // 가계부 필터 기본값 - 급여일 기준 현재 기간의 시작 월
 var _initPeriod = getPayPeriod(0);
-document.getElementById('sp-filter-month').value = _initPeriod.start.getFullYear()+'-'+String(_initPeriod.start.getMonth()+1).padStart(2,'0');
+// sp-filter-month 제거됨 - spendPeriodOffset 방식으로 대체
 // 1. 설정 먼저 로드 (localStorage → 화면 반영)
 loadSettings();
 // 2. 네비 렌더 (hiddenTabs, tabOrder 반영)
