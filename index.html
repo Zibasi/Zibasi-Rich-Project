@@ -3016,7 +3016,10 @@ window.savePayday = function() {
   cfPayday = parseInt(document.getElementById('cf-payday').value);
   localStorage.setItem('cfPayday', cfPayday);
   cfPeriodOffset = 0;
+  spendPeriodOffset = 0;
   renderCashflow();
+  renderSpends();
+  renderHome();
 };
 
 // 급여일 기준 기간 계산
