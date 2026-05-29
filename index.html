@@ -238,6 +238,32 @@
   .mini-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
   .mini-bar-amt { font-size: 12px; color: var(--text2); min-width: 60px; text-align: right; font-family: 'DM Mono', monospace; }
 
+  /* 투자 탭 서브탭 */
+  .inv-subtabs { display: flex; gap: 6px; margin-bottom: 16px; background: var(--surface2); padding: 4px; border-radius: 10px; }
+  .inv-subtab { flex: 1; padding: 9px 4px; background: none; border: none; border-radius: 7px; font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 500; color: var(--text3); cursor: pointer; transition: all 0.15s; }
+  .inv-subtab.active { background: var(--surface); color: var(--green); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .inv-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* 관심종목 카드 */
+  .wl-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .wl-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .wl-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .wl-name { font-size: 14px; font-weight: 600; }
+  .wl-code { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-left: 6px; }
+  .wl-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .wl-metric { background: var(--surface2); border-radius: 8px; padding: 8px 6px; text-align: center; }
+  .wl-metric .m-label { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .wl-metric .m-val { font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  /* 목표/손절 */
+  .tc-result { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .tc-box { border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .tc-target { background: var(--green-bg); }
+  .tc-stop { background: #fdecea; }
+  .tc-box-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .tc-box-val { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; }
+  .tc-target .tc-box-val { color: var(--green); }
+  .tc-stop .tc-box-val { color: var(--red); }
+  .tc-box-sub { font-size: 11px; margin-top: 4px; color: var(--text2); }
+
   /* 결혼자금 트래커 */
   .wedding-hero { text-align: center; padding: 20px 0 16px; }
   .wedding-dday { font-size: 36px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
@@ -563,16 +589,76 @@
     </div>
 
     <div class="page" id="page-invest">
-      <div class="card">
-        <div class="card-label">투자 추가</div>
-        <div class="form-row"><label>월</label><input type="month" id="inv-month" /></div>
-        <div class="form-row"><label>금액 (원)</label><input type="text" inputmode="numeric" id="inv-amt" placeholder="500,000" oninput="formatComma(this)" /></div>
-        <div class="form-row"><label>항목</label><input type="text" id="inv-note" placeholder="TIGER 미국S&P500" /></div>
-        <button class="btn btn-primary" onclick="addInvest()">기록 추가</button>
+      <div class="inv-subtabs">
+        <button class="inv-subtab active" data-sub="watch" onclick="switchInvSub('watch',this)">관심종목</button>
+        <button class="inv-subtab" data-sub="calc" onclick="switchInvSub('calc',this)">목표·손절</button>
+        <button class="inv-subtab" data-sub="record" onclick="switchInvSub('record',this)">수익률</button>
       </div>
-      <div class="card">
-        <div class="card-label">투자 내역</div>
-        <div id="invest-list"><div class="loading">불러오는 중...</div></div>
+
+      <!-- 관심종목 + PER/PBR/ROE -->
+      <div class="inv-sub" id="inv-sub-watch">
+        <div class="card">
+          <div class="card-label">관심종목 추가</div>
+          <div class="form-row"><label>종목명</label><input type="text" id="wl-name" placeholder="삼성전자" /></div>
+          <div class="form-row"><label>종목코드 (선택, 자동조회용)</label><input type="text" inputmode="numeric" id="wl-code" placeholder="005930" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="form-row" style="margin-bottom:0"><label>PER</label><input type="text" inputmode="decimal" id="wl-per" placeholder="12.5" /></div>
+            <div class="form-row" style="margin-bottom:0"><label>PBR</label><input type="text" inputmode="decimal" id="wl-pbr" placeholder="1.2" /></div>
+            <div class="form-row" style="margin-bottom:0"><label>ROE %</label><input type="text" inputmode="decimal" id="wl-roe" placeholder="15" /></div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:12px" onclick="addWatch()">관심종목 추가</button>
+          <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">💡 PER 낮을수록 저평가 · PBR 1 미만이면 자산가치 이하 · ROE 15%↑ 우수</div>
+        </div>
+        <div class="card">
+          <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>관심종목 비교</span>
+            <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--text3);cursor:pointer" onclick="sortWatch()" id="wl-sort-label">정렬: PER ↑</span>
+          </div>
+          <div id="watch-list"><div class="loading">불러오는 중...</div></div>
+        </div>
+      </div>
+
+      <!-- 목표가/손절가 자동계산 -->
+      <div class="inv-sub" id="inv-sub-calc" style="display:none">
+        <div class="card">
+          <div class="card-label">목표가 · 손절가 계산</div>
+          <div class="form-row"><label>매수가 (원)</label><input type="text" inputmode="numeric" id="tc-buy" placeholder="70,000" oninput="formatComma(this);calcTarget()" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row"><label>목표 수익률 %</label><input type="text" inputmode="decimal" id="tc-gain" value="20" oninput="calcTarget()" /></div>
+            <div class="form-row"><label>손절률 %</label><input type="text" inputmode="decimal" id="tc-loss" value="10" oninput="calcTarget()" /></div>
+          </div>
+          <div class="form-row"><label>보유 수량 (선택)</label><input type="text" inputmode="numeric" id="tc-qty" placeholder="10" oninput="formatComma(this);calcTarget()" /></div>
+          <div class="tc-result" id="tc-result" style="display:none">
+            <div class="tc-box tc-target"><div class="tc-box-label">목표가</div><div class="tc-box-val" id="tc-target-price"></div><div class="tc-box-sub" id="tc-target-profit"></div></div>
+            <div class="tc-box tc-stop"><div class="tc-box-label">손절가</div><div class="tc-box-val" id="tc-stop-price"></div><div class="tc-box-sub" id="tc-stop-loss"></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">⚠️ 손절은 실패가 아니라 리스크 관리입니다. -50% 손실 회복엔 +100% 수익이 필요해요.</div>
+        </div>
+      </div>
+
+      <!-- 월별 수익률 추적 -->
+      <div class="inv-sub" id="inv-sub-record" style="display:none">
+        <div class="card">
+          <div class="card-label">월별 평가 기록</div>
+          <div class="form-row"><label>월</label><input type="month" id="rec-month" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row"><label>총 투자원금 (원)</label><input type="text" inputmode="numeric" id="rec-cost" placeholder="3,000,000" oninput="formatComma(this)" /></div>
+            <div class="form-row"><label>현재 평가액 (원)</label><input type="text" inputmode="numeric" id="rec-value" placeholder="3,200,000" oninput="formatComma(this)" /></div>
+          </div>
+          <button class="btn btn-primary" onclick="addReturn()">이달 기록</button>
+        </div>
+        <div class="card" id="rec-summary-card" style="display:none">
+          <div class="card-label">수익률 추이 (최근 6개월)</div>
+          <div class="inv-stat-grid">
+            <div class="stat-box"><div class="s-label">현재 평가손익</div><div class="s-val" id="rec-pl">-</div></div>
+            <div class="stat-box"><div class="s-label">현재 수익률</div><div class="s-val" id="rec-rate">-</div></div>
+          </div>
+          <div id="return-chart" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">기록 내역</div>
+          <div id="return-list"><div class="empty">아직 기록이 없어요</div></div>
+        </div>
       </div>
     </div>
 
@@ -592,6 +678,23 @@
           <div class="ir-save"><span>절약 금액</span><span id="isa-save"></span></div>
         </div>
         <div style="font-size:12px;color:var(--text3);margin-top:12px;line-height:1.6">ISA: 연 2,000만원 한도 · 수익 200만원까지 비과세 · 초과분 9.9% · 3년 의무유지</div>
+      </div>
+      <div class="card">
+        <div class="card-label">적립 시뮬레이터 (복리)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-row"><label>월 적립액 (원)</label><input type="text" inputmode="numeric" id="sim-monthly" value="400,000" oninput="formatComma(this);calcSim()" /></div>
+          <div class="form-row"><label>연 수익률 %</label><input type="text" inputmode="decimal" id="sim-rate" value="8" oninput="calcSim()" /></div>
+        </div>
+        <div class="form-row"><label>투자 기간 (년)</label><input type="text" inputmode="numeric" id="sim-years" value="20" oninput="calcSim()" /></div>
+        <div class="sim-result" id="sim-result">
+          <div class="inv-stat-grid">
+            <div class="stat-box"><div class="s-label">투자 원금</div><div class="s-val" id="sim-cost" style="font-size:16px">-</div></div>
+            <div class="stat-box"><div class="s-label">예상 평가액</div><div class="s-val green" id="sim-final" style="font-size:16px">-</div></div>
+          </div>
+          <div class="stat-box" style="margin-top:10px"><div class="s-label">예상 수익 (복리 효과)</div><div class="s-val green" id="sim-profit" style="font-size:18px">-</div></div>
+          <div id="sim-chart" style="margin-top:14px"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">※ 매월 말 적립·연 수익률 일정 가정. 실제 수익률은 시장에 따라 다릅니다.</div>
       </div>
       <div class="card">
         <div class="card-label">ETF 용어</div>
@@ -1204,7 +1307,7 @@ window.refreshAll = async function() {
   if(btn) { btn.textContent='↻ 로딩중...'; btn.disabled=true; }
   setSyncStatus('syncing');
   try {
-    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets(),loadLoans()]);
+    await Promise.all([loadInvests(),loadSpends(),loadMemos(),loadSavings(),loadAssets(),loadLoans(),loadWatchlist(),loadReturns()]);
     renderHome();
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); }
@@ -2246,9 +2349,231 @@ window.delInvest = async (id) => {
 };
 function renderInvests() {
   const el=document.getElementById('invest-list');
+  if(!el) return;
   if(!invests.length){el.innerHTML='<div class="empty">아직 기록이 없어요</div>';return;}
   el.innerHTML=invests.map(i=>`<div class="list-item"><div><div class="li-main">${i.note}</div><div class="li-sub">${i.month}</div></div><div style="display:flex;align-items:center;gap:10px"><span class="li-amt">${i.amt.toLocaleString()}원</span><button class="del-btn" onclick="delInvest('${i.id}')">×</button></div></div>`).join('');
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 투자 탭: 서브탭 전환
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+window.switchInvSub = function(sub, btn) {
+  document.querySelectorAll('.inv-subtab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.inv-sub').forEach(s=>s.style.display='none');
+  var el = document.getElementById('inv-sub-'+sub);
+  if(el) el.style.display='';
+  if(sub==='watch') renderWatch();
+  if(sub==='record') renderReturns();
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 1. 관심종목 + PER/PBR/ROE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var watchlist = [];
+var wlSortMode = 'per';
+async function loadWatchlist() {
+  try {
+    const snap = await getDocs(query(col('watchlist'), orderBy('createdAt','desc')));
+    watchlist = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) { watchlist = []; }
+  renderWatch();
+}
+function parseNum(id) {
+  var v = (document.getElementById(id).value||'').replace(/[^0-9.\-]/g,'');
+  return v===''? null : parseFloat(v);
+}
+window.addWatch = async () => {
+  var name = document.getElementById('wl-name').value.trim();
+  if(!name) return alert('종목명을 입력해주세요.');
+  var data = {
+    name: name,
+    code: document.getElementById('wl-code').value.replace(/[^0-9]/g,''),
+    per: parseNum('wl-per'), pbr: parseNum('wl-pbr'), roe: parseNum('wl-roe'),
+    createdAt: Date.now()
+  };
+  var ref = await addDoc(col('watchlist'), data);
+  watchlist.unshift({id:ref.id,...data});
+  ['wl-name','wl-code','wl-per','wl-pbr','wl-roe'].forEach(id=>document.getElementById(id).value='');
+  renderWatch();
+};
+window.delWatch = async (id) => {
+  await deleteDoc(doc(db,'users',uid,'watchlist',id));
+  watchlist = watchlist.filter(x=>x.id!==id);
+  renderWatch();
+};
+window.sortWatch = function() {
+  var order = ['per','pbr','roe'];
+  wlSortMode = order[(order.indexOf(wlSortMode)+1)%3];
+  var labels = {per:'PER ↑', pbr:'PBR ↑', roe:'ROE ↓'};
+  var lab = document.getElementById('wl-sort-label');
+  if(lab) lab.textContent = '정렬: '+labels[wlSortMode];
+  renderWatch();
+};
+function renderWatch() {
+  var el = document.getElementById('watch-list');
+  if(!el) return;
+  if(!watchlist.length){ el.innerHTML='<div class="empty">관심종목을 추가해보세요</div>'; return; }
+  var list = watchlist.slice();
+  list.sort(function(a,b){
+    var av=a[wlSortMode], bv=b[wlSortMode];
+    if(av===null||av===undefined) return 1;
+    if(bv===null||bv===undefined) return -1;
+    return wlSortMode==='roe' ? bv-av : av-bv;
+  });
+  var color = function(metric, v){
+    if(v===null||v===undefined) return 'var(--text3)';
+    if(metric==='per') return v<10?'var(--green)':v>20?'var(--red)':'var(--text)';
+    if(metric==='pbr') return v<1?'var(--green)':v>3?'var(--red)':'var(--text)';
+    if(metric==='roe') return v>=15?'var(--green)':v<5?'var(--red)':'var(--text)';
+  };
+  var show = function(v){ return (v===null||v===undefined)?'-':v; };
+  el.innerHTML = list.map(function(w){
+    return '<div class="wl-item"><div class="wl-head"><div><span class="wl-name">'+w.name+'</span>'+(w.code?'<span class="wl-code">'+w.code+'</span>':'')+'</div><button class="del-btn" onclick="delWatch(\''+w.id+'\')">×</button></div>'
+      +'<div class="wl-metrics">'
+      +'<div class="wl-metric"><div class="m-label">PER</div><div class="m-val" style="color:'+color('per',w.per)+'">'+show(w.per)+'</div></div>'
+      +'<div class="wl-metric"><div class="m-label">PBR</div><div class="m-val" style="color:'+color('pbr',w.pbr)+'">'+show(w.pbr)+'</div></div>'
+      +'<div class="wl-metric"><div class="m-label">ROE</div><div class="m-val" style="color:'+color('roe',w.roe)+'">'+(w.roe!==null&&w.roe!==undefined?w.roe+'%':'-')+'</div></div>'
+      +'</div></div>';
+  }).join('');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 2. 목표가 / 손절가 계산
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+window.calcTarget = function() {
+  var buy = getVal('tc-buy');
+  var gain = parseFloat((document.getElementById('tc-gain').value||'0').replace(/[^0-9.]/g,''))||0;
+  var loss = parseFloat((document.getElementById('tc-loss').value||'0').replace(/[^0-9.]/g,''))||0;
+  var qty = getVal('tc-qty');
+  var res = document.getElementById('tc-result');
+  if(!buy || buy<=0){ res.style.display='none'; return; }
+  res.style.display='grid';
+  var target = Math.round(buy*(1+gain/100));
+  var stop = Math.round(buy*(1-loss/100));
+  document.getElementById('tc-target-price').textContent = target.toLocaleString()+'원';
+  document.getElementById('tc-stop-price').textContent = stop.toLocaleString()+'원';
+  if(qty>0){
+    document.getElementById('tc-target-profit').textContent = '+'+((target-buy)*qty).toLocaleString()+'원';
+    document.getElementById('tc-stop-loss').textContent = '-'+((buy-stop)*qty).toLocaleString()+'원';
+  } else {
+    document.getElementById('tc-target-profit').textContent = '주당 +'+(target-buy).toLocaleString()+'원';
+    document.getElementById('tc-stop-loss').textContent = '주당 -'+(buy-stop).toLocaleString()+'원';
+  }
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 3. 월별 수익률 추적
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var returns = [];
+async function loadReturns() {
+  try {
+    const snap = await getDocs(query(col('returns'), orderBy('month','asc')));
+    returns = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) { returns = []; }
+  renderReturns();
+}
+window.addReturn = async () => {
+  var m = document.getElementById('rec-month').value;
+  var cost = getVal('rec-cost');
+  var value = getVal('rec-value');
+  if(!m || !cost || cost<=0) return alert('월과 투자원금을 입력해주세요.');
+  var existing = returns.find(r=>r.month===m);
+  var data = {month:m, cost:cost, value:value, createdAt:Date.now()};
+  if(existing){
+    await updateDoc(doc(db,'users',uid,'returns',existing.id), {cost:cost, value:value});
+    existing.cost=cost; existing.value=value;
+  } else {
+    var ref = await addDoc(col('returns'), data);
+    returns.push({id:ref.id,...data});
+  }
+  returns.sort((a,b)=>a.month.localeCompare(b.month));
+  document.getElementById('rec-cost').value='';
+  document.getElementById('rec-value').value='';
+  renderReturns();
+};
+window.delReturn = async (id) => {
+  await deleteDoc(doc(db,'users',uid,'returns',id));
+  returns = returns.filter(x=>x.id!==id);
+  renderReturns();
+};
+function renderReturns() {
+  var listEl = document.getElementById('return-list');
+  var chartEl = document.getElementById('return-chart');
+  var card = document.getElementById('rec-summary-card');
+  if(!listEl) return;
+  if(!returns.length){
+    listEl.innerHTML='<div class="empty">아직 기록이 없어요</div>';
+    if(card) card.style.display='none';
+    return;
+  }
+  if(card) card.style.display='block';
+  var latest = returns[returns.length-1];
+  var pl = latest.value - latest.cost;
+  var rate = latest.cost>0 ? (pl/latest.cost*100) : 0;
+  var plEl = document.getElementById('rec-pl');
+  var rateEl = document.getElementById('rec-rate');
+  plEl.textContent = (pl>=0?'+':'')+pl.toLocaleString()+'원';
+  plEl.style.color = pl>=0?'var(--green)':'var(--red)';
+  rateEl.textContent = (rate>=0?'+':'')+rate.toFixed(1)+'%';
+  rateEl.style.color = rate>=0?'var(--green)':'var(--red)';
+  // 차트 (수익률 %)
+  if(chartEl){
+    var data = returns.slice(-6).map(function(r){
+      return {month:r.month, rate: r.cost>0?(r.value-r.cost)/r.cost*100:0};
+    });
+    var rates = data.map(d=>d.rate);
+    var maxR = Math.max(...rates, 0.1);
+    var minR = Math.min(...rates, 0);
+    var range = (maxR-minR)||1;
+    chartEl.innerHTML = data.map(function(d){
+      var pct = Math.round((Math.abs(d.rate))/Math.max(Math.abs(maxR),Math.abs(minR),1)*100);
+      return '<div class="mini-bar-row"><span style="font-size:11px;color:var(--text2);min-width:44px">'+d.month.replace('-','/').slice(2)+'</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:'+pct+'%;background:'+(d.rate>=0?'var(--green)':'var(--red)')+'"></div></div><span style="font-size:12px;font-family:monospace;min-width:56px;text-align:right;color:'+(d.rate>=0?'var(--green)':'var(--red)')+'">'+(d.rate>=0?'+':'')+d.rate.toFixed(1)+'%</span></div>';
+    }).join('');
+  }
+  // 목록
+  var rev = returns.slice().reverse();
+  listEl.innerHTML = rev.map(function(r){
+    var p = r.value-r.cost;
+    var rt = r.cost>0?(p/r.cost*100):0;
+    return '<div class="list-item"><div><div class="li-main">'+r.month+'</div><div class="li-sub">원금 '+fmt(r.cost)+' · 평가 '+fmt(r.value)+'</div></div><div style="display:flex;align-items:center;gap:10px"><span class="li-amt" style="color:'+(p>=0?'var(--green)':'var(--red)')+'">'+(rt>=0?'+':'')+rt.toFixed(1)+'%</span><button class="del-btn" onclick="delReturn(\''+r.id+'\')">×</button></div></div>';
+  }).join('');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 4. ETF 적립 시뮬레이터 (복리)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+window.calcSim = function() {
+  var monthly = getVal('sim-monthly');
+  var annual = parseFloat((document.getElementById('sim-rate').value||'0').replace(/[^0-9.]/g,''))||0;
+  var years = parseInt((document.getElementById('sim-years').value||'0').replace(/[^0-9]/g,''))||0;
+  if(!monthly || !years){ return; }
+  var r = annual/100/12;
+  var n = years*12;
+  var future = r>0 ? monthly*((Math.pow(1+r,n)-1)/r) : monthly*n;
+  var cost = monthly*n;
+  var profit = future - cost;
+  document.getElementById('sim-cost').textContent = fmt(Math.round(cost));
+  document.getElementById('sim-final').textContent = fmt(Math.round(future));
+  document.getElementById('sim-profit').textContent = '+'+fmt(Math.round(profit));
+  // 연도별 차트 (5개 구간)
+  var chartEl = document.getElementById('sim-chart');
+  if(chartEl){
+    var pts = [];
+    var step = Math.max(1, Math.round(years/5));
+    for(var y=step; y<=years; y+=step){
+      var nn=y*12;
+      var fv = r>0 ? monthly*((Math.pow(1+r,nn)-1)/r) : monthly*nn;
+      pts.push({y:y, v:fv});
+    }
+    if(pts[pts.length-1].y !== years) { var fvL=r>0?monthly*((Math.pow(1+r,n)-1)/r):monthly*n; pts.push({y:years, v:fvL}); }
+    var maxV = Math.max(...pts.map(p=>p.v),1);
+    chartEl.innerHTML = pts.map(function(p){
+      var pct = Math.round(p.v/maxV*100);
+      return '<div class="mini-bar-row"><span style="font-size:11px;color:var(--text2);min-width:36px">'+p.y+'년</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:'+pct+'%;background:var(--green)"></div></div><span style="font-size:11px;font-family:monospace;min-width:64px;text-align:right;color:var(--green)">'+fmt(Math.round(p.v))+'</span></div>';
+    }).join('');
+  }
+};
 
 window.addSpend = async () => {
   const d=document.getElementById('sp-date').value;
@@ -2730,6 +3055,8 @@ window.goPage = (id,btn) => {
   if(id==='assets') renderAssets();
   if(id==='loan') renderLoans();
   if(id==='exchange') fetchExchangeRates();
+  if(id==='invest') { renderWatch(); renderReturns(); }
+  if(id==='etf') calcSim();
   if(id==='budget') { renderBudgetList(); renderBudgetStatus(); }
   if(id==='report') renderReport();
   if(id==='networth') renderNetworth();
@@ -3157,8 +3484,9 @@ function renderCashflow() {
 
 const now=new Date();
 document.getElementById('header-date').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일 ('+['일','월','화','수','목','금','토'][now.getDay()]+'요일)';
-document.getElementById('inv-month').value=now.toISOString().slice(0,7);
 document.getElementById('sp-date').value=todayStr();
+var _recMonth=document.getElementById('rec-month'); if(_recMonth) _recMonth.value=now.toISOString().slice(0,7);
+try { calcSim(); } catch(e){}
 // 가계부 필터 기본값 - 급여일 기준 현재 기간의 시작 월
 var _initPeriod = getPayPeriod(0);
 // sp-filter-month 제거됨 - spendPeriodOffset 방식으로 대체
