@@ -2,8 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>우리 재테크</title>
+<link rel="manifest" href="/manifest.json" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="재테크" />
+<meta name="theme-color" content="#1a7a58" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a7a58'/><text y='130' x='90' text-anchor='middle' font-size='105'>💰</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
@@ -3498,5 +3505,16 @@ renderNav();
 // 수입 기본값 제거됨 - 신규 사용자는 빈 상태로 시작
 // 5. 수지 월 초기화
 </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+          console.log('SW registered:', reg.scope);
+        }).catch(function(err) {
+          console.log('SW failed:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
