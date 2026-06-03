@@ -1020,6 +1020,22 @@
       </div>
     </div>
 
+    <div class="page" id="page-fixedexp">
+      <div class="page-header"><h2 class="page-title">고정지출</h2></div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:13px;color:var(--text2)">월세, 통신비, 보험료 등 매달 나가는 항목</span>
+          <span style="font-size:15px;font-weight:700;color:var(--red);font-family:DM Mono,monospace" id="fe-total">0원</span>
+        </div>
+        <div id="fixed-expense-list" style="margin-bottom:14px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="fe-name" placeholder="항목명 (예: 월세)" style="flex:1;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit" />
+          <input type="text" inputmode="numeric" id="fe-amt" placeholder="금액" oninput="formatComma(this)" style="width:100px;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:monospace" />
+          <button onclick="addFixedExpense()" style="padding:9px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">추가</button>
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-settings">
 
       <!-- 기본 재무 정보 -->
@@ -1032,22 +1048,6 @@
         <input type="hidden" id="set-fixed" value="0" />
         <button class="btn btn-primary" onclick="saveFinanceSettings()">저장</button>
         <div id="set-finance-msg" style="font-size:12px;color:var(--green);margin-top:8px;display:none">✓ 저장됐어요</div>
-      </div>
-
-      <!-- 고정지출 항목 관리 -->
-      <div class="card">
-        <div class="card-label">고정지출 항목 관리</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">월세, 통신비, 보험료 등 매달 나가는 항목</div>
-        <div id="fixed-expense-list" style="margin-bottom:12px"></div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input type="text" id="fe-name" placeholder="항목명 (예: 월세)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:inherit" />
-          <input type="text" inputmode="numeric" id="fe-amt" placeholder="금액" oninput="formatComma(this)" style="width:110px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);outline:none;font-family:monospace" />
-          <button onclick="addFixedExpense()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap">추가</button>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);margin-top:4px">
-          <span style="font-size:13px;font-weight:600">월 고정지출 합계</span>
-          <span style="font-size:15px;font-weight:600;color:var(--red);font-family:monospace" id="fe-total">0원</span>
-        </div>
       </div>
 
       <!-- 결혼 예정일 -->
@@ -1120,6 +1120,7 @@
   <nav class="bottom-nav">
     <div class="nav-scroll-wrap" id="nav-scroll-wrap">
     <button class="nav-btn" data-page="spend" onclick="goPage('spend',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>가계부</button>
+    <button class="nav-btn" data-page="fixedexp" onclick="goPage('fixedexp',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/></svg>고정지출</button>
     <button class="nav-btn" data-page="cashflow" onclick="goPage('cashflow',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>수지</button>
     <button class="nav-btn" data-page="wedding" onclick="goPage('wedding',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>결혼</button>
     <button class="nav-btn" data-page="pension" onclick="goPage('pension',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>연금</button>
@@ -2761,6 +2762,7 @@ function renderHome() {
 // ── 탭 순서 관리 ──
 var DEFAULT_TABS = [
   {id:'spend', label:'가계부', svg:'<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>'},
+  {id:'fixedexp', label:'고정지출', svg:'<path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/>'},
   {id:'cashflow', label:'수지', svg:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'},
   {id:'wedding', label:'결혼', svg:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'},
   {id:'pension', label:'연금', svg:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
@@ -3055,10 +3057,8 @@ window.goPage = (id,btn) => {
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='cashflow') renderCashflow();
-  if(id==='settings') {
-    renderUnifiedSortList();
-    renderFixedExpenses();
-  }
+  if(id==='settings') { renderUnifiedSortList(); }
+  if(id==='fixedexp') renderFixedExpenses();
   if(id==='assets') renderAssets();
   if(id==='loan') renderLoans();
   if(id==='exchange') fetchExchangeRates();
