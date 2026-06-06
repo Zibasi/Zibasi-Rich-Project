@@ -695,6 +695,21 @@
           <label>20세 이하 자녀 수</label>
           <input type="number" id="sal-child" value="0" min="0" max="10" onchange="calcSalary()" style="width:80px;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);text-align:center" />
         </div>
+        <div class="form-row"><label>비과세 식대 (원)</label><input type="text" inputmode="numeric" id="sal-meal" value="200,000" oninput="formatComma(this);calcSalary()" style="max-width:160px" /></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div class="card-label" style="margin-bottom:10px">연장근무 (선택)</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button onclick="setSalOtMode('hours')" id="sal-ot-btn-h" style="flex:1;padding:8px;border:2px solid var(--green);border-radius:var(--radius-sm);background:var(--green);color:#fff;font-size:12px;cursor:pointer;font-family:inherit">시간 입력</button>
+            <button onclick="setSalOtMode('amount')" id="sal-ot-btn-a" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit">금액 직접 입력</button>
+          </div>
+          <div id="sal-ot-hours-wrap">
+            <div class="form-row" style="align-items:center;gap:10px"><label>연장근무 시간 (월)</label><input type="number" id="sal-ot-h" value="0" min="0" max="100" onchange="calcSalary()" style="width:80px;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);text-align:center" /><span style="font-size:12px;color:var(--text3)">시간</span></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">통상시급 = 기본급 ÷ 209시간 · 연장수당 = 통상시급 × 1.5 × 시간</div>
+          </div>
+          <div id="sal-ot-amount-wrap" style="display:none">
+            <div class="form-row"><label>연장수당 금액 (원)</label><input type="text" inputmode="numeric" id="sal-ot-a" placeholder="0" oninput="formatComma(this);calcSalary()" /></div>
+          </div>
+        </div>
       </div>
 
       <!-- 결과 -->
@@ -702,8 +717,20 @@
         <div class="card-label">공제 내역</div>
         <div style="display:flex;flex-direction:column;gap:0">
           <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
-            <span style="font-size:13px;color:var(--text2)">세전 월급</span>
+            <span style="font-size:13px;color:var(--text2)">기본급</span>
             <span id="sal-r-gross" style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue)"></span>
+          </div>
+          <div id="sal-r-ot-row" style="display:none;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">연장수당 <span id="sal-r-ot-detail" style="font-size:11px"></span></span>
+            <span id="sal-r-ot" style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue)"></span>
+          </div>
+          <div id="sal-r-meal-row" style="justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">비과세 식대</span>
+            <span id="sal-r-meal" style="font-size:13px;font-family:DM Mono,monospace;color:var(--text3)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">과세 총액</span>
+            <span id="sal-r-taxable-total" style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue)"></span>
           </div>
           <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
             <span style="font-size:13px;color:var(--text2)">국민연금 <span id="sal-r-np-rate" style="font-size:11px"></span></span>
@@ -3640,36 +3667,84 @@ function calcWithholdingTax(monthly, dep, child) {
   return Math.floor(tax / 12 / 10) * 10;
 }
 
+var _salOtMode = 'hours';
+window.setSalOtMode = function(mode) {
+  _salOtMode = mode;
+  var hBtn = document.getElementById('sal-ot-btn-h');
+  var aBtn = document.getElementById('sal-ot-btn-a');
+  var hWrap = document.getElementById('sal-ot-hours-wrap');
+  var aWrap = document.getElementById('sal-ot-amount-wrap');
+  if(mode==='hours') {
+    hBtn.style.cssText += ';background:var(--green);color:#fff;border:2px solid var(--green)';
+    aBtn.style.cssText += ';background:none;color:var(--text2);border:1px solid var(--border)';
+    hWrap.style.display=''; aWrap.style.display='none';
+  } else {
+    aBtn.style.cssText += ';background:var(--green);color:#fff;border:2px solid var(--green)';
+    hBtn.style.cssText += ';background:none;color:var(--text2);border:1px solid var(--border)';
+    hWrap.style.display='none'; aWrap.style.display='';
+  }
+  calcSalary();
+};
+
 window.calcSalary = function() {
   var gross = parseInt((document.getElementById('sal-gross').value||'0').replace(/[^0-9]/g,''))||0;
   if(!gross) { document.getElementById('sal-result').style.display='none'; return; }
-  var year = parseInt(document.getElementById('sal-year').value)||2026;
-  var dep  = parseInt(document.getElementById('sal-dep').value)||1;
-  var child= parseInt(document.getElementById('sal-child').value)||0;
+  var year  = parseInt(document.getElementById('sal-year').value)||2026;
+  var dep   = parseInt(document.getElementById('sal-dep').value)||1;
+  var child = parseInt(document.getElementById('sal-child').value)||0;
+  var meal  = parseInt((document.getElementById('sal-meal').value||'0').replace(/[^0-9]/g,''))||0;
   var r = SALARY_RATES[year] || SALARY_RATES[2026];
 
-  // 국민연금 (상한/하한 적용)
-  var npBase = Math.min(Math.max(gross, r.npMin), r.npMax);
+  // 연장수당 계산
+  var otAmt = 0, otDetail = '';
+  if(_salOtMode === 'hours') {
+    var otH = parseFloat(document.getElementById('sal-ot-h').value)||0;
+    if(otH > 0) {
+      var hourlyWage = Math.floor(gross / 209);
+      otAmt = Math.floor(hourlyWage * 1.5 * otH / 10) * 10;
+      otDetail = '(시급 '+hourlyWage.toLocaleString()+'원 × 1.5 × '+otH+'h)';
+    }
+  } else {
+    otAmt = parseInt((document.getElementById('sal-ot-a').value||'0').replace(/[^0-9]/g,''))||0;
+  }
+
+  // 과세 기준: 기본급 + 연장수당 (비과세 식대 제외)
+  var taxBase = gross + otAmt;
+  var totalPay = taxBase + meal; // 실제 수령 총액 (세전)
+
+  // 4대보험은 과세 급여 기준
+  var npBase = Math.min(Math.max(taxBase, r.npMin), r.npMax);
   var np = Math.floor(npBase * r.np / 10) * 10;
-  // 건강보험
-  var hi = Math.floor(gross * r.hi / 10) * 10;
-  // 장기요양보험 (건강보험료 기준)
+  var hi = Math.floor(taxBase * r.hi / 10) * 10;
   var lc = Math.floor(hi * r.lc / 10) * 10;
-  // 고용보험
-  var ei = Math.floor(gross * r.ei / 10) * 10;
-  // 소득세
-  var it = calcWithholdingTax(gross, dep, child);
-  // 지방소득세
+  var ei = Math.floor(taxBase * r.ei / 10) * 10;
+  // 소득세: 과세 급여 기준
+  var it = calcWithholdingTax(taxBase, dep, child);
   var lit = Math.floor(it * 0.1 / 10) * 10;
 
   var totalDed = np + hi + lc + ei + it + lit;
-  var net = gross - totalDed;
+  var net = totalPay - totalDed;
 
   var fmtW = function(n){ return (n<0?'-':'')+Math.abs(n).toLocaleString()+'원'; };
-  var fmtRate = function(r){ return '('+( r*100).toFixed(3)+'%)'; };
+  var fmtRate = function(rt){ return '('+(rt*100).toFixed(3)+'%)'; };
 
   document.getElementById('sal-result').style.display = 'block';
   document.getElementById('sal-r-gross').textContent = fmtW(gross);
+
+  // 연장수당 행
+  var otRow = document.getElementById('sal-r-ot-row');
+  if(otAmt > 0) {
+    otRow.style.display='flex';
+    document.getElementById('sal-r-ot-detail').textContent = otDetail;
+    document.getElementById('sal-r-ot').textContent = '+'+fmtW(otAmt);
+  } else { otRow.style.display='none'; }
+
+  // 식대 행
+  var mealRow = document.getElementById('sal-r-meal-row');
+  mealRow.style.display = meal > 0 ? 'flex' : 'none';
+  document.getElementById('sal-r-meal').textContent = meal > 0 ? '비과세 +'+fmtW(meal) : '';
+  document.getElementById('sal-r-taxable-total').textContent = fmtW(taxBase);
+
   document.getElementById('sal-r-np-rate').textContent = fmtRate(r.np);
   document.getElementById('sal-r-np').textContent = '-'+fmtW(np);
   document.getElementById('sal-r-hi-rate').textContent = fmtRate(r.hi);
@@ -3683,7 +3758,7 @@ window.calcSalary = function() {
   document.getElementById('sal-r-total-ded').textContent = '-'+fmtW(totalDed);
   document.getElementById('sal-r-net').textContent = fmtW(net);
   document.getElementById('sal-rate-info').innerHTML =
-    year+'년 기준 · 국민연금 상한 '+r.npMax.toLocaleString()+'원 · 비과세 식대 20만원 미반영 시 공제액 증가';
+    year+'년 기준 · 국민연금 상한 '+r.npMax.toLocaleString()+'원 · 4대보험·소득세는 과세액(기본급+연장수당) 기준';
 };
 
 
