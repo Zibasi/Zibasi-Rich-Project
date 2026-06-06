@@ -669,6 +669,88 @@
       </div>
     </div>
 
+    <div class="page" id="page-salary">
+      <div class="page-header"><h2 class="page-title">급여 계산기</h2></div>
+      <!-- 입력 -->
+      <div class="card">
+        <div class="card-label">기본 정보</div>
+        <div class="form-row"><label>연도</label>
+          <select id="sal-year" onchange="calcSalary()" style="padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);width:100%">
+            <option value="2026">2026년</option>
+            <option value="2025">2025년</option>
+            <option value="2024">2024년</option>
+          </select>
+        </div>
+        <div class="form-row"><label>세전 월급 (원)</label><input type="text" inputmode="numeric" id="sal-gross" placeholder="3,000,000" oninput="formatComma(this);calcSalary()" /></div>
+        <div class="form-row"><label>부양가족 수 (본인 포함)</label>
+          <select id="sal-dep" onchange="calcSalary()" style="padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);width:100%">
+            <option value="1">1명 (본인만)</option>
+            <option value="2">2명</option>
+            <option value="3">3명</option>
+            <option value="4">4명</option>
+            <option value="5">5명 이상</option>
+          </select>
+        </div>
+        <div class="form-row" style="align-items:center;gap:10px">
+          <label>20세 이하 자녀 수</label>
+          <input type="number" id="sal-child" value="0" min="0" max="10" onchange="calcSalary()" style="width:80px;padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--surface);color:var(--text);text-align:center" />
+        </div>
+      </div>
+
+      <!-- 결과 -->
+      <div class="card" id="sal-result" style="display:none">
+        <div class="card-label">공제 내역</div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">세전 월급</span>
+            <span id="sal-r-gross" style="font-size:13px;font-weight:600;font-family:DM Mono,monospace;color:var(--blue)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">국민연금 <span id="sal-r-np-rate" style="font-size:11px"></span></span>
+            <span id="sal-r-np" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">건강보험 <span id="sal-r-hi-rate" style="font-size:11px"></span></span>
+            <span id="sal-r-hi" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">장기요양보험 <span id="sal-r-lc-rate" style="font-size:11px"></span></span>
+            <span id="sal-r-lc" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">고용보험 <span id="sal-r-ei-rate" style="font-size:11px"></span></span>
+            <span id="sal-r-ei" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">소득세 (간이세액)</span>
+            <span id="sal-r-it" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;color:var(--text2)">지방소득세 (소득세의 10%)</span>
+            <span id="sal-r-lit" style="font-size:13px;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:2px solid var(--border)">
+            <span style="font-size:13px;font-weight:600;color:var(--red)">총 공제액</span>
+            <span id="sal-r-total-ded" style="font-size:13px;font-weight:700;font-family:DM Mono,monospace;color:var(--red)"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0">
+            <span style="font-size:15px;font-weight:700">실수령액 (세후)</span>
+            <span id="sal-r-net" style="font-size:17px;font-weight:700;font-family:DM Mono,monospace;color:var(--green)"></span>
+          </div>
+        </div>
+        <div id="sal-rate-info" style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6"></div>
+      </div>
+
+      <!-- 연봉 입력 시 월환산 안내 -->
+      <div class="card" style="background:var(--bg)">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7">
+          💡 <b>연봉 → 월급 환산:</b> 연봉 ÷ 12<br>
+          💡 비과세 식대(월 20만원)는 4대보험·소득세 계산 시 제외되어 실제 공제액이 더 낮을 수 있어요.<br>
+          💡 소득세는 국세청 <b>근로소득 간이세액표</b> 기준이며 실제와 ±5만원 차이날 수 있어요.
+        </div>
+      </div>
+    </div>
+
     <div class="page" id="page-etf">
       <div class="card">
         <div class="card-label">추천 포트폴리오 (월 50만원)</div>
@@ -1127,6 +1209,7 @@
     <button class="nav-btn" data-page="savings" onclick="goPage('savings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 10h4"/></svg>예적금</button>
     <button class="nav-btn" data-page="invest" onclick="goPage('invest',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>투자</button>
     <button class="nav-btn" data-page="etf" onclick="goPage('etf',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>ETF</button>
+    <button class="nav-btn" data-page="salary" onclick="goPage('salary',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>급여계산기</button>
     <button class="nav-btn" data-page="exchange" onclick="goPage('exchange',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>환율</button>
     <button class="nav-btn" data-page="loan" onclick="goPage('loan',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/></svg>대출</button>
     <button class="nav-btn" data-page="assets" onclick="goPage('assets',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/></svg>자산</button>
@@ -2769,6 +2852,7 @@ var DEFAULT_TABS = [
   {id:'savings', label:'예적금', svg:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>'},
   {id:'invest', label:'투자', svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'etf', label:'ETF', svg:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'salary', label:'급여계산기', svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'exchange', label:'환율', svg:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
   {id:'loan', label:'대출', svg:'<path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 6v6l4 2"/>'},
   {id:'assets', label:'자산', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M6 8h.01M6 11h.01M9 8h6M9 11h6"/>'},
@@ -3064,6 +3148,7 @@ window.goPage = (id,btn) => {
   if(id==='exchange') fetchExchangeRates();
   if(id==='invest') { renderWatch(); renderReturns(); }
   if(id==='etf') calcSim();
+  if(id==='salary') calcSalary();
   if(id==='budget') { renderBudgetList(); renderBudgetStatus(); }
   if(id==='report') renderReport();
   if(id==='networth') renderNetworth();
@@ -3504,6 +3589,104 @@ renderNav();
 // 결혼일 기본값 제거됨 - 신규 사용자는 빈 상태로 시작
 // 수입 기본값 제거됨 - 신규 사용자는 빈 상태로 시작
 // 5. 수지 월 초기화
+// ── 급여 계산기 ──
+// 연도별 4대보험 요율 (근로자 부담분)
+var SALARY_RATES = {
+  2026: { np:0.045, npMax:6370000, npMin:400000, hi:0.03545, lc:0.1295, ei:0.009 },
+  2025: { np:0.045, npMax:6170000, npMin:390000, hi:0.03545, lc:0.1295, ei:0.009 },
+  2024: { np:0.045, npMax:5900000, npMin:370000, hi:0.03545, lc:0.1295, ei:0.009 }
+};
+
+// 근로소득 간이세액표 근사 계산 (국세청 기준)
+function calcWithholdingTax(monthly, dep, child) {
+  dep = parseInt(dep)||1;
+  child = parseInt(child)||0;
+  // 비과세 20만원 제외 후 과세 월급
+  var taxable = Math.max(0, monthly - 200000);
+  // 근로소득공제 (월 기준 근사)
+  var annualGross = taxable * 12;
+  var deduction;
+  if(annualGross <= 5000000) deduction = annualGross * 0.7;
+  else if(annualGross <= 15000000) deduction = 3500000 + (annualGross-5000000)*0.4;
+  else if(annualGross <= 45000000) deduction = 7500000 + (annualGross-15000000)*0.15;
+  else if(annualGross <= 100000000) deduction = 12000000 + (annualGross-45000000)*0.05;
+  else deduction = 14750000 + (annualGross-100000000)*0.02;
+  deduction = Math.min(deduction, 20000000);
+  var earnedIncome = annualGross - deduction;
+  // 기본공제 (본인+부양가족 × 150만원)
+  var basicDed = dep * 1500000;
+  // 자녀세액공제는 세액에서 차감
+  var taxBase = Math.max(0, earnedIncome - basicDed);
+  // 소득세율 구간
+  var tax;
+  if(taxBase <= 14000000) tax = taxBase * 0.06;
+  else if(taxBase <= 50000000) tax = 840000 + (taxBase-14000000)*0.15;
+  else if(taxBase <= 88000000) tax = 6240000 + (taxBase-50000000)*0.24;
+  else if(taxBase <= 150000000) tax = 15360000 + (taxBase-88000000)*0.35;
+  else if(taxBase <= 300000000) tax = 37060000 + (taxBase-150000000)*0.38;
+  else if(taxBase <= 500000000) tax = 94060000 + (taxBase-300000000)*0.40;
+  else tax = 174060000 + (taxBase-500000000)*0.42;
+  // 근로소득세액공제
+  var taxCredit;
+  if(tax <= 500000) taxCredit = tax * 0.55;
+  else taxCredit = 275000 + (tax-500000)*0.30;
+  taxCredit = Math.min(taxCredit, 660000);
+  tax = Math.max(0, tax - taxCredit);
+  // 자녀세액공제
+  if(child === 1) tax = Math.max(0, tax - 150000);
+  else if(child === 2) tax = Math.max(0, tax - 350000);
+  else if(child >= 3) tax = Math.max(0, tax - 350000 - (child-2)*300000);
+  // 월 소득세 (연간 ÷ 12, 10원 미만 절사)
+  return Math.floor(tax / 12 / 10) * 10;
+}
+
+window.calcSalary = function() {
+  var gross = parseInt((document.getElementById('sal-gross').value||'0').replace(/[^0-9]/g,''))||0;
+  if(!gross) { document.getElementById('sal-result').style.display='none'; return; }
+  var year = parseInt(document.getElementById('sal-year').value)||2026;
+  var dep  = parseInt(document.getElementById('sal-dep').value)||1;
+  var child= parseInt(document.getElementById('sal-child').value)||0;
+  var r = SALARY_RATES[year] || SALARY_RATES[2026];
+
+  // 국민연금 (상한/하한 적용)
+  var npBase = Math.min(Math.max(gross, r.npMin), r.npMax);
+  var np = Math.floor(npBase * r.np / 10) * 10;
+  // 건강보험
+  var hi = Math.floor(gross * r.hi / 10) * 10;
+  // 장기요양보험 (건강보험료 기준)
+  var lc = Math.floor(hi * r.lc / 10) * 10;
+  // 고용보험
+  var ei = Math.floor(gross * r.ei / 10) * 10;
+  // 소득세
+  var it = calcWithholdingTax(gross, dep, child);
+  // 지방소득세
+  var lit = Math.floor(it * 0.1 / 10) * 10;
+
+  var totalDed = np + hi + lc + ei + it + lit;
+  var net = gross - totalDed;
+
+  var fmtW = function(n){ return (n<0?'-':'')+Math.abs(n).toLocaleString()+'원'; };
+  var fmtRate = function(r){ return '('+( r*100).toFixed(3)+'%)'; };
+
+  document.getElementById('sal-result').style.display = 'block';
+  document.getElementById('sal-r-gross').textContent = fmtW(gross);
+  document.getElementById('sal-r-np-rate').textContent = fmtRate(r.np);
+  document.getElementById('sal-r-np').textContent = '-'+fmtW(np);
+  document.getElementById('sal-r-hi-rate').textContent = fmtRate(r.hi);
+  document.getElementById('sal-r-hi').textContent = '-'+fmtW(hi);
+  document.getElementById('sal-r-lc-rate').textContent = '(건강보험료의 '+(r.lc*100).toFixed(2)+'%)';
+  document.getElementById('sal-r-lc').textContent = '-'+fmtW(lc);
+  document.getElementById('sal-r-ei-rate').textContent = fmtRate(r.ei);
+  document.getElementById('sal-r-ei').textContent = '-'+fmtW(ei);
+  document.getElementById('sal-r-it').textContent = '-'+fmtW(it);
+  document.getElementById('sal-r-lit').textContent = '-'+fmtW(lit);
+  document.getElementById('sal-r-total-ded').textContent = '-'+fmtW(totalDed);
+  document.getElementById('sal-r-net').textContent = fmtW(net);
+  document.getElementById('sal-rate-info').innerHTML =
+    year+'년 기준 · 국민연금 상한 '+r.npMax.toLocaleString()+'원 · 비과세 식대 20만원 미반영 시 공제액 증가';
+};
+
+
 </script>
   <script>
     if ('serviceWorker' in navigator) {
