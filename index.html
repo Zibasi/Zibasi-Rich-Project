@@ -2720,9 +2720,10 @@ window.moveSpendPeriod = function(dir) {
   renderSpends();
 };
 function forceRepaint(el) {
-  if(!el) return;
-  el.style.opacity = '0.999';
-  requestAnimationFrame(function(){ el.style.opacity = ''; });
+  try {
+    document.body.style.zoom = '0.99999';
+    setTimeout(function(){ document.body.style.zoom = '1'; }, 0);
+  } catch(e) {}
 }
 function renderSpends() {
   var period = getPayPeriod(spendPeriodOffset);
