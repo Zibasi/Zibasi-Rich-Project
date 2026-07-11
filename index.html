@@ -2719,6 +2719,11 @@ window.moveSpendPeriod = function(dir) {
   if(nextBtn) nextBtn.style.opacity = spendPeriodOffset >= 0 ? '0.3' : '1';
   renderSpends();
 };
+function forceRepaint(el) {
+  if(!el) return;
+  el.style.opacity = '0.999';
+  requestAnimationFrame(function(){ el.style.opacity = ''; });
+}
 function renderSpends() {
   var period = getPayPeriod(spendPeriodOffset);
   var fmt = function(d){ return (d.getMonth()+1)+'월 '+d.getDate()+'일'; };
@@ -2750,6 +2755,7 @@ function renderSpends() {
     tr.style.display='none';
     el.innerHTML='<div class="empty">해당 기간 기록이 없어요</div>';
     document.getElementById('spend-chart-card').style.display='none';
+    forceRepaint(document.getElementById('page-spend'));
     return;
   }
   tr.style.display='flex';
@@ -2799,6 +2805,7 @@ function renderSpends() {
   } else {
     document.getElementById('spend-chart-card').style.display='none';
   }
+  forceRepaint(document.getElementById('page-spend'));
 }
 
 var editingSpendId = null;
