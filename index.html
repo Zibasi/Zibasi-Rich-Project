@@ -2753,14 +2753,8 @@ function renderSpends() {
     return;
   }
   tr.style.display='flex';
-  // 합계 라벨 - 카테고리 필터 시 해당 카테고리 합계 명시
   var totalLabel = document.getElementById('spend-filter-label');
-  if(filterCat) {
-    totalLabel.textContent = filterCat+' 합계';
-    catLabelEl.textContent = '';
-  } else {
-    totalLabel.textContent = '전체';
-  }
+  totalLabel.textContent = filterCat ? filterCat : '전체';
   document.getElementById('spend-total').textContent = total.toLocaleString()+'원';
 
   el.innerHTML = list.map(s => {
@@ -2818,6 +2812,7 @@ window.saveSpendEdit = async function(id) {
   if(!date||!amt) return alert('날짜와 금액을 입력해주세요.');
   await updateDoc(doc(db,'users',uid,'spends',id),{date,cat,amt,memo});
   editingSpendId = null;
+  renderSpends();
 };
 
 window.addMemo = async () => {
