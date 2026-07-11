@@ -2753,8 +2753,41 @@ function renderSpends() {
     return;
   }
   tr.style.display='flex';
+  // 합계 라벨 - 카테고리 필터 시 해당 카테고리 합계 명시
+  var totalLabel = document.getElementById('spend-filter-label');
+  if(filterCat) {
+    totalLabel.textContent = filterCat+' 합계';
+    catLabelEl.textContent = '';
+  } else {
+    totalLabel.textContent = '전체';
+  }
   document.getElementById('spend-total').textContent = total.toLocaleString()+'원';
-  el.innerHTML = list.map(s=>`<div class="list-item"><div><div class="li-main"><span class="cat-dot" style="background:${catColors[s.cat]||'#9e9d97'}"></span>${s.cat}${s.memo?' · '+s.memo:''}</div><div class="li-sub">${s.date}</div></div><div style="display:flex;align-items:center;gap:10px"><span class="li-amt">${s.amt.toLocaleString()}원</span><button class="del-btn" onclick="delSpend('${s.id}')">×</button></div></div>`).join('');
+
+  el.innerHTML = list.map(s => {
+    if(editingSpendId === s.id) {
+      // 인라인 편집 모드
+      var catOpts = ['식비','교통','쇼핑','카페','공과금','문화/여가','기타'].map(c =>
+        `<option value="${c}" ${s.cat===c?'selected':''}>${c}</option>`
+      ).join('');
+      return `<div class="list-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px 0">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input type="text" id="se-date-${s.id}" value="${s.date}" style="width:110px;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;background:var(--surface);color:var(--text)" />
+          <select id="se-cat-${s.id}" style="flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;background:var(--surface);color:var(--text)">${catOpts}</select>
+          <input type="text" inputmode="numeric" id="se-amt-${s.id}" value="${s.amt.toLocaleString()}" oninput="formatComma(this)" style="width:100px;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;background:var(--surface);color:var(--text);font-family:monospace" />
+        </div>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="se-memo-${s.id}" value="${s.memo||''}" placeholder="메모" style="flex:1;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;background:var(--surface);color:var(--text)" />
+          <button onclick="saveSpendEdit('${s.id}')" style="padding:7px 12px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;cursor:pointer">저장</button>
+          <button onclick="cancelSpendEdit()" style="padding:7px 10px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;color:var(--text2)">취소</button>
+          <button onclick="delSpend('${s.id}')" style="padding:7px 10px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;color:var(--red)">삭제</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="list-item" onclick="editSpend('${s.id}')" style="cursor:pointer">
+      <div><div class="li-main"><span class="cat-dot" style="background:${catColors[s.cat]||'#9e9d97'}"></span>${s.cat}${s.memo?' · '+s.memo:''}</div><div class="li-sub">${s.date}</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="li-amt">${s.amt.toLocaleString()}원</span><button class="del-btn" onclick="event.stopPropagation();delSpend('${s.id}')">×</button></div>
+    </div>`;
+  }).join('');
 
   // 카테고리 차트 (필터 없을 때만)
   if(!filterCat) {
@@ -2773,6 +2806,19 @@ function renderSpends() {
     document.getElementById('spend-chart-card').style.display='none';
   }
 }
+
+var editingSpendId = null;
+window.editSpend = function(id) { editingSpendId = id; renderSpends(); };
+window.cancelSpendEdit = function() { editingSpendId = null; renderSpends(); };
+window.saveSpendEdit = async function(id) {
+  var date = document.getElementById('se-date-'+id).value.trim();
+  var cat  = document.getElementById('se-cat-'+id).value;
+  var amt  = parseInt((document.getElementById('se-amt-'+id).value||'0').replace(/[^0-9]/g,''))||0;
+  var memo = document.getElementById('se-memo-'+id).value.trim();
+  if(!date||!amt) return alert('날짜와 금액을 입력해주세요.');
+  await updateDoc(doc(db,'users',uid,'spends',id),{date,cat,amt,memo});
+  editingSpendId = null;
+};
 
 window.addMemo = async () => {
   const tag=document.getElementById('memo-tag-sel').value;
@@ -3763,16 +3809,6 @@ window.calcSalary = function() {
 
 
 </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').then(function(reg) {
-          console.log('SW registered:', reg.scope);
-        }).catch(function(err) {
-          console.log('SW failed:', err);
-        });
-      });
-    }
-  </script>
+
 </body>
 </html>
