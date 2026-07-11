@@ -837,11 +837,11 @@
           <button onclick="moveSpendPeriod(1)" id="sp-period-next" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:18px;cursor:pointer;color:var(--text2)">›</button>
         </div>
         <div class="filter-bar">
-          <select id="sp-filter-cat" onchange="renderSpends()">
+          <select id="sp-filter-cat" onchange="renderSpends();this.blur();">
             <option value="">전체 카테고리</option>
             <option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>공과금</option><option>문화/여가</option><option>기타</option>
           </select>
-          <select id="sp-filter-sort" onchange="renderSpends()">
+          <select id="sp-filter-sort" onchange="renderSpends();this.blur();">
             <option value="date-desc">날짜 최신순</option>
             <option value="date-asc">날짜 오래된순</option>
             <option value="amt-desc">금액 높은순</option>
