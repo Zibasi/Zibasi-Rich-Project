@@ -121,6 +121,14 @@
   .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
   .filter-bar select, .filter-bar input { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface); color: var(--text); outline: none; flex: 1; min-width: 90px; }
   .filter-bar select:focus, .filter-bar input:focus { border-color: var(--green); }
+  .csel { position: relative; flex: 1; min-width: 90px; }
+  .csel-btn { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Noto Sans KR', sans-serif; background: var(--surface); color: var(--text); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .csel-arrow { font-size: 10px; color: var(--text3); margin-left: 4px; }
+  .csel-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 50; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 4px 14px rgba(0,0,0,.14); }
+  .csel-list.open { display: block; }
+  .csel-opt { padding: 10px 12px; font-size: 13px; cursor: pointer; color: var(--text); }
+  .csel-opt.sel { color: var(--green); font-weight: 600; }
+  .csel-opt:active { background: var(--bg); }
   .filter-clear { padding: 7px 12px; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--text2); cursor: pointer; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap; }
   .filter-clear:hover { border-color: var(--text2); }
 
@@ -837,16 +845,30 @@
           <button onclick="moveSpendPeriod(1)" id="sp-period-next" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:18px;cursor:pointer;color:var(--text2)">›</button>
         </div>
         <div class="filter-bar">
-          <select id="sp-filter-cat" onchange="renderSpends();this.blur();">
-            <option value="">전체 카테고리</option>
-            <option>식비</option><option>교통</option><option>쇼핑</option><option>카페</option><option>공과금</option><option>문화/여가</option><option>기타</option>
-          </select>
-          <select id="sp-filter-sort" onchange="renderSpends();this.blur();">
-            <option value="date-desc">날짜 최신순</option>
-            <option value="date-asc">날짜 오래된순</option>
-            <option value="amt-desc">금액 높은순</option>
-            <option value="amt-asc">금액 낮은순</option>
-          </select>
+          <input type="hidden" id="sp-filter-cat" value="">
+          <div class="csel" id="sp-filter-cat-wrap">
+            <button type="button" class="csel-btn" onclick="toggleCsel('sp-filter-cat')"><span id="sp-filter-cat-label">전체 카테고리</span><span class="csel-arrow">▾</span></button>
+            <div class="csel-list" id="sp-filter-cat-list">
+              <div class="csel-opt sel" data-v="" onclick="selectCsel('sp-filter-cat','','전체 카테고리')">전체 카테고리</div>
+              <div class="csel-opt" data-v="식비" onclick="selectCsel('sp-filter-cat','식비','식비')">식비</div>
+              <div class="csel-opt" data-v="교통" onclick="selectCsel('sp-filter-cat','교통','교통')">교통</div>
+              <div class="csel-opt" data-v="쇼핑" onclick="selectCsel('sp-filter-cat','쇼핑','쇼핑')">쇼핑</div>
+              <div class="csel-opt" data-v="카페" onclick="selectCsel('sp-filter-cat','카페','카페')">카페</div>
+              <div class="csel-opt" data-v="공과금" onclick="selectCsel('sp-filter-cat','공과금','공과금')">공과금</div>
+              <div class="csel-opt" data-v="문화/여가" onclick="selectCsel('sp-filter-cat','문화/여가','문화/여가')">문화/여가</div>
+              <div class="csel-opt" data-v="기타" onclick="selectCsel('sp-filter-cat','기타','기타')">기타</div>
+            </div>
+          </div>
+          <input type="hidden" id="sp-filter-sort" value="date-desc">
+          <div class="csel" id="sp-filter-sort-wrap">
+            <button type="button" class="csel-btn" onclick="toggleCsel('sp-filter-sort')"><span id="sp-filter-sort-label">날짜 최신순</span><span class="csel-arrow">▾</span></button>
+            <div class="csel-list" id="sp-filter-sort-list">
+              <div class="csel-opt sel" data-v="date-desc" onclick="selectCsel('sp-filter-sort','date-desc','날짜 최신순')">날짜 최신순</div>
+              <div class="csel-opt" data-v="date-asc" onclick="selectCsel('sp-filter-sort','date-asc','날짜 오래된순')">날짜 오래된순</div>
+              <div class="csel-opt" data-v="amt-desc" onclick="selectCsel('sp-filter-sort','amt-desc','금액 높은순')">금액 높은순</div>
+              <div class="csel-opt" data-v="amt-asc" onclick="selectCsel('sp-filter-sort','amt-asc','금액 낮은순')">금액 낮은순</div>
+            </div>
+          </div>
         </div>
         <div id="spend-total-row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
           <span style="font-size:13px;color:var(--text2)">합계 <span id="spend-filter-label" style="color:var(--green);font-weight:600"></span></span>
@@ -2719,6 +2741,28 @@ window.moveSpendPeriod = function(dir) {
   if(nextBtn) nextBtn.style.opacity = spendPeriodOffset >= 0 ? '0.3' : '1';
   renderSpends();
 };
+window.toggleCsel = function(key) {
+  document.querySelectorAll('.csel-list').forEach(function(l){ if(l.id !== key+'-list') l.classList.remove('open'); });
+  var list = document.getElementById(key+'-list');
+  if(list) list.classList.toggle('open');
+};
+window.selectCsel = function(key, val, label) {
+  var hidden = document.getElementById(key);
+  if(hidden) hidden.value = val;
+  var lbl = document.getElementById(key+'-label');
+  if(lbl) lbl.textContent = label;
+  var list = document.getElementById(key+'-list');
+  if(list) {
+    list.querySelectorAll('.csel-opt').forEach(function(o){ o.classList.toggle('sel', o.getAttribute('data-v')===val); });
+    list.classList.remove('open');
+  }
+  renderSpends();
+};
+document.addEventListener('click', function(e) {
+  if(!e.target.closest('.csel')) {
+    document.querySelectorAll('.csel-list').forEach(function(l){ l.classList.remove('open'); });
+  }
+});
 function forceRepaint(el) {
   try {
     document.body.style.zoom = '0.99999';
